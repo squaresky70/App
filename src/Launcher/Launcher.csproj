@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- 콘솔 창이 뜨지 않도록 WinExe -->
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>NotionCalendar.Launcher</RootNamespace>
+    <AssemblyName>Calendar-Portable</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 캘린더 앱 폴더 전체를 압축해 exe 안에 심는다 -->
+    <EmbeddedResource Include="$(MSBuildProjectDirectory)\..\..\packaging\payload\app.zip" LogicalName="app.zip" />
+  </ItemGroup>
+
+</Project>

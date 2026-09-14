@@ -4,3 +4,6 @@ obj/
 *.user
 *.suo
 publish/
+dist/
+dist-portable/
+packaging/payload/
