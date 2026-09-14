@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="NotionCalendar.Dialogs.ScheduleEditDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:NotionCalendar.Models"
+    Title="일정"
+    Background="{StaticResource BgCanvasBrush}"
+    CloseButtonText="취소"
+    DefaultButton="Primary"
+    Foreground="{StaticResource TextPrimaryBrush}"
+    PrimaryButtonText="저장"
+    RequestedTheme="Light"
+    mc:Ignorable="d">
+
+    <ContentDialog.Resources>
+        <!--  노션 느낌으로 흰 배경 + 큰 라운드  -->
+        <CornerRadius x:Key="OverlayCornerRadius">14</CornerRadius>
+        <SolidColorBrush x:Key="ContentDialogBackground" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="ContentDialogTopOverlay" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="ContentDialogSeparatorBorderBrush" Color="#EDEDEB" />
+        <Thickness x:Key="ContentDialogSeparatorThickness">0</Thickness>
+
+        <!--  버튼 강조색을 앱 액센트로 통일  -->
+        <SolidColorBrush x:Key="AccentButtonBackground" Color="#2383E2" />
+        <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#3B92E6" />
+        <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#1C6FC0" />
+    </ContentDialog.Resources>
+
+    <Grid Width="376" RowSpacing="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  제목  -->
+        <TextBox
+            x:Name="TitleBox"
+            Grid.Row="0"
+            Padding="12,10"
+            Background="{StaticResource BgSubtleBrush}"
+            BorderBrush="{StaticResource BorderBrushStrong}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource RadiusSm}"
+            FontSize="15"
+            FontWeight="SemiBold"
+            Foreground="{StaticResource TextPrimaryBrush}"
+            PlaceholderText="제목을 입력하세요"
+            TextChanged="OnTitleChanged" />
+
+        <!--  날짜  -->
+        <Grid Grid.Row="1" ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="64" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="{StaticResource FontSizeCaption}"
+                Foreground="{StaticResource TextSecondaryBrush}"
+                Text="날짜" />
+            <CalendarDatePicker
+                x:Name="DatePickerControl"
+                Grid.Column="1"
+                HorizontalAlignment="Stretch"
+                CornerRadius="{StaticResource RadiusSm}"
+                DateFormat="{}{year.full}년 {month.integer}월 {day.integer}일"
+                PlaceholderText="날짜 선택" />
+        </Grid>
+
+        <!--  하루 종일 스위치  -->
+        <Grid Grid.Row="2" ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="64" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="{StaticResource FontSizeCaption}"
+                Foreground="{StaticResource TextSecondaryBrush}"
+                Text="하루 종일" />
+            <ToggleSwitch
+                x:Name="AllDaySwitch"
+                Grid.Column="1"
+                MinWidth="0"
+                OffContent=""
+                OnContent=""
+                Toggled="OnAllDayToggled" />
+        </Grid>
+
+        <!--  시작 / 종료 시각  -->
+        <Grid
+            x:Name="TimeRow"
+            Grid.Row="3"
+            ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="64" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="{StaticResource FontSizeCaption}"
+                Foreground="{StaticResource TextSecondaryBrush}"
+                Text="시간" />
+            <TimePicker
+                x:Name="StartTimePicker"
+                Grid.Column="1"
+                HorizontalAlignment="Stretch"
+                ClockIdentifier="24HourClock"
+                CornerRadius="{StaticResource RadiusSm}"
+                MinuteIncrement="5" />
+            <TextBlock
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                Foreground="{StaticResource TextTertiaryBrush}"
+                Text="–" />
+            <TimePicker
+                x:Name="EndTimePicker"
+                Grid.Column="3"
+                HorizontalAlignment="Stretch"
+                ClockIdentifier="24HourClock"
+                CornerRadius="{StaticResource RadiusSm}"
+                MinuteIncrement="5" />
+        </Grid>
+
+        <!--  색상  -->
+        <Grid Grid.Row="4" ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="64" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="{StaticResource FontSizeCaption}"
+                Foreground="{StaticResource TextSecondaryBrush}"
+                Text="색상" />
+            <ItemsRepeater
+                x:Name="ColorRepeater"
+                Grid.Column="1"
+                VerticalAlignment="Center">
+                <ItemsRepeater.Layout>
+                    <StackLayout Orientation="Horizontal" Spacing="7" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:ScheduleColorOption">
+                        <Grid
+                            Width="26"
+                            Height="26"
+                            Background="Transparent"
+                            Tapped="OnColorTapped"
+                            ToolTipService.ToolTip="{x:Bind Name}">
+                            <!--  선택 표시 링  -->
+                            <Border
+                                BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="1.5"
+                                CornerRadius="13"
+                                Opacity="{x:Bind RingOpacity, Mode=OneWay}" />
+                            <Border
+                                Width="16"
+                                Height="16"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="{x:Bind Dot}"
+                                CornerRadius="8" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </Grid>
+
+        <!--  메모  -->
+        <TextBox
+            x:Name="NoteBox"
+            Grid.Row="5"
+            Height="78"
+            Padding="12,9"
+            AcceptsReturn="True"
+            Background="{StaticResource BgSubtleBrush}"
+            BorderBrush="{StaticResource BorderBrushStrong}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource RadiusSm}"
+            FontSize="{StaticResource FontSizeBody}"
+            Foreground="{StaticResource TextPrimaryBrush}"
+            PlaceholderText="메모 (선택)"
+            TextWrapping="Wrap" />
+    </Grid>
+</ContentDialog>
