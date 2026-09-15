@@ -266,6 +266,7 @@
                                     <DataTemplate x:DataType="models:ScheduleItem">
                                         <Border
                                             Padding="12,10"
+                                            DataContext="{x:Bind Mode=OneWay}"
                                             Background="{StaticResource BgCanvasBrush}"
                                             BorderBrush="{StaticResource BorderBrushSoft}"
                                             BorderThickness="1"
