@@ -142,38 +142,53 @@
                 FontSize="{StaticResource FontSizeCaption}"
                 Foreground="{StaticResource TextSecondaryBrush}"
                 Text="색상" />
-            <ItemsRepeater
-                x:Name="ColorRepeater"
+            <!--
+                ItemsRepeater/ItemsControl 은 이 다이얼로그(ContentDialog) 안에서 어떤 이유로도
+                항목을 하나도 실체화하지 않는 문제가 있었다(바인딩 유무와 무관하게 0개로 렌더링).
+                색상은 정확히 9개로 고정이라 목록 컨트롤이 필요 없으므로 정적 XAML로 직접 선언한다.
+            -->
+            <StackPanel
                 Grid.Column="1"
-                VerticalAlignment="Center">
-                <ItemsRepeater.Layout>
-                    <StackLayout Orientation="Horizontal" Spacing="7" />
-                </ItemsRepeater.Layout>
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate x:DataType="models:ScheduleColorOption">
-                        <Grid
-                            Width="26"
-                            Height="26"
-                            Background="Transparent"
-                            Tapped="OnColorTapped"
-                            ToolTipService.ToolTip="{x:Bind Name}">
-                            <!--  선택 표시 링  -->
-                            <Border
-                                BorderBrush="{StaticResource AccentBrush}"
-                                BorderThickness="1.5"
-                                CornerRadius="13"
-                                Opacity="{x:Bind RingOpacity, Mode=OneWay}" />
-                            <Border
-                                Width="16"
-                                Height="16"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Background="{x:Bind Dot}"
-                                CornerRadius="8" />
-                        </Grid>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="7">
+                <Grid Width="26" Height="26" Background="Transparent" Tag="gray" Tapped="OnColorTapped" AutomationProperties.Name="회색" ToolTipService.ToolTip="회색">
+                    <Border x:Name="RingGray" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5" CornerRadius="13" Opacity="0" />
+                    <Border Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#9B9A97" CornerRadius="8" />
+                </Grid>
+                <Grid Width="26" Height="26" Background="Transparent" Tag="brown" Tapped="OnColorTapped" AutomationProperties.Name="갈색" ToolTipService.ToolTip="갈색">
+                    <Border x:Name="RingBrown" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5" CornerRadius="13" Opacity="0" />
+                    <Border Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#A97C5D" CornerRadius="8" />
+                </Grid>
+                <Grid Width="26" Height="26" Background="Transparent" Tag="orange" Tapped="OnColorTapped" AutomationProperties.Name="주황" ToolTipService.ToolTip="주황">
+                    <Border x:Name="RingOrange" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5" CornerRadius="13" Opacity="0" />
+                    <Border Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#D9730D" CornerRadius="8" />
+                </Grid>
+                <Grid Width="26" Height="26" Background="Transparent" Tag="yellow" Tapped="OnColorTapped" AutomationProperties.Name="노랑" ToolTipService.ToolTip="노랑">
+                    <Border x:Name="RingYellow" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5" CornerRadius="13" Opacity="0" />
+                    <Border Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#DFAB01" CornerRadius="8" />
+                </Grid>
+                <Grid Width="26" Height="26" Background="Transparent" Tag="green" Tapped="OnColorTapped" AutomationProperties.Name="초록" ToolTipService.ToolTip="초록">
+                    <Border x:Name="RingGreen" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5" CornerRadius="13" Opacity="0" />
+                    <Border Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#4DAB6D" CornerRadius="8" />
+                </Grid>
+                <Grid Width="26" Height="26" Background="Transparent" Tag="blue" Tapped="OnColorTapped" AutomationProperties.Name="파랑" ToolTipService.ToolTip="파랑">
+                    <Border x:Name="RingBlue" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5" CornerRadius="13" Opacity="0" />
+                    <Border Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#2383E2" CornerRadius="8" />
+                </Grid>
+                <Grid Width="26" Height="26" Background="Transparent" Tag="purple" Tapped="OnColorTapped" AutomationProperties.Name="보라" ToolTipService.ToolTip="보라">
+                    <Border x:Name="RingPurple" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5" CornerRadius="13" Opacity="0" />
+                    <Border Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#9065B0" CornerRadius="8" />
+                </Grid>
+                <Grid Width="26" Height="26" Background="Transparent" Tag="pink" Tapped="OnColorTapped" AutomationProperties.Name="분홍" ToolTipService.ToolTip="분홍">
+                    <Border x:Name="RingPink" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5" CornerRadius="13" Opacity="0" />
+                    <Border Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#C14C8A" CornerRadius="8" />
+                </Grid>
+                <Grid Width="26" Height="26" Background="Transparent" Tag="red" Tapped="OnColorTapped" AutomationProperties.Name="빨강" ToolTipService.ToolTip="빨강">
+                    <Border x:Name="RingRed" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5" CornerRadius="13" Opacity="0" />
+                    <Border Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#E03E3E" CornerRadius="8" />
+                </Grid>
+            </StackPanel>
         </Grid>
 
         <!--  메모  -->

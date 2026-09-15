@@ -1,12 +1,11 @@
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
-using NotionCalendar.ViewModels;
 using Windows.UI;
 
 namespace NotionCalendar.Models;
 
-/// <summary>일정에 붙일 수 있는 색상 하나. 다이얼로그에서 선택 상태도 함께 관리한다.</summary>
-public sealed class ScheduleColorOption : ObservableObject
+/// <summary>일정에 붙일 수 있는 색상 하나.</summary>
+public sealed class ScheduleColorOption
 {
     public ScheduleColorOption(string key, string name, string fillHex, string textHex, string dotHex)
     {
@@ -29,22 +28,6 @@ public sealed class ScheduleColorOption : ObservableObject
 
     /// <summary>목록의 좌측 색상 막대 / 색상 선택 점.</summary>
     public SolidColorBrush Dot { get; }
-
-    private bool _isSelected;
-
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set
-        {
-            if (Set(ref _isSelected, value))
-            {
-                Raise(nameof(RingOpacity));
-            }
-        }
-    }
-
-    public double RingOpacity => _isSelected ? 1d : 0d;
 
     public static Color Hex(string hex)
     {

@@ -500,6 +500,12 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// 삭제 버튼을 누른 탭이 카드 전체의 OnScheduleCardTapped 로 다시 버블링되어
+    /// 수정 다이얼로그와 삭제 확인 다이얼로그가 동시에 뜨려다 충돌하는 것을 막는다.
+    /// </summary>
+    private void OnDeleteButtonTapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;
+
     private async Task ShowScheduleDialogAsync(ScheduleItem? existing, DateOnly date)
     {
         if (Content?.XamlRoot is null)

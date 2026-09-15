@@ -12,6 +12,7 @@ namespace NotionCalendar.Dialogs;
 public sealed partial class ScheduleEditDialog : ContentDialog
 {
     private string _colorKey = ScheduleColors.DefaultKey;
+    private Dictionary<string, Border> _colorRings = null!;
 
     /// <param name="existing">수정할 일정. null 이면 새 일정 추가 모드.</param>
     /// <param name="defaultDate">추가 모드일 때 기본 날짜.</param>
@@ -28,7 +29,18 @@ public sealed partial class ScheduleEditDialog : ContentDialog
             SecondaryButtonText = "삭제";
         }
 
-        ColorRepeater.ItemsSource = ScheduleColors.All;
+        _colorRings = new Dictionary<string, Border>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["gray"] = RingGray,
+            ["brown"] = RingBrown,
+            ["orange"] = RingOrange,
+            ["yellow"] = RingYellow,
+            ["green"] = RingGreen,
+            ["blue"] = RingBlue,
+            ["purple"] = RingPurple,
+            ["pink"] = RingPink,
+            ["red"] = RingRed,
+        };
 
         var source = existing?.Clone() ?? new ScheduleItem { Date = defaultDate };
         LoadFrom(source);
@@ -61,17 +73,17 @@ public sealed partial class ScheduleEditDialog : ContentDialog
     private void SelectColor(string key)
     {
         _colorKey = key;
-        foreach (var option in ScheduleColors.All)
+        foreach (var (ringKey, ring) in _colorRings)
         {
-            option.IsSelected = string.Equals(option.Key, key, StringComparison.OrdinalIgnoreCase);
+            ring.Opacity = string.Equals(ringKey, key, StringComparison.OrdinalIgnoreCase) ? 1d : 0d;
         }
     }
 
     private void OnColorTapped(object sender, TappedRoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: ScheduleColorOption option })
+        if (sender is FrameworkElement { Tag: string key })
         {
-            SelectColor(option.Key);
+            SelectColor(key);
         }
     }
 

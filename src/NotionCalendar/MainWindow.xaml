@@ -72,6 +72,13 @@
                             FontWeight="SemiBold"
                             Foreground="{StaticResource TextTertiaryBrush}"
                             Text="{x:Bind VM.YearTitle, Mode=OneWay}" />
+                        <TextBlock
+                            Margin="2,0,0,2"
+                            VerticalAlignment="Bottom"
+                            FontSize="11.5"
+                            FontWeight="SemiBold"
+                            Foreground="{StaticResource TextTertiaryBrush}"
+                            Text="{x:Bind VM.SelectedDateDiffText, Mode=OneWay}" />
                     </StackPanel>
 
                     <StackPanel
@@ -311,6 +318,7 @@
                                                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                                                     FontSize="12"
                                                     Style="{StaticResource GhostIconButtonStyle}"
+                                                    Tapped="OnDeleteButtonTapped"
                                                     ToolTipService.ToolTip="삭제" />
                                             </Grid>
                                         </Border>

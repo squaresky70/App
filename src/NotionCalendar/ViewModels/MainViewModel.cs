@@ -60,7 +60,7 @@ public sealed class MainViewModel : ObservableObject
         {
             if (Set(ref _selectedDate, value))
             {
-                RaiseAll(nameof(SelectedDateTitle), nameof(SelectedWeekdayTitle));
+                RaiseAll(nameof(SelectedDateTitle), nameof(SelectedWeekdayTitle), nameof(SelectedDateDiffText));
                 RefreshSelection();
                 RefreshSelectedDaySchedules();
             }
@@ -74,6 +74,21 @@ public sealed class MainViewModel : ObservableObject
     public string SelectedDateTitle => $"{SelectedDate.Month}월 {SelectedDate.Day}일";
 
     public string SelectedWeekdayTitle => WeekdayNames[(int)SelectedDate.DayOfWeek];
+
+    /// <summary>오늘과 선택한 날짜의 차이. 오늘이면 "오늘", 미래면 "D-n", 과거면 "D+n".</summary>
+    public string SelectedDateDiffText
+    {
+        get
+        {
+            var diff = SelectedDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
+            return diff switch
+            {
+                0 => "오늘",
+                > 0 => $"D-{diff}",
+                _ => $"D+{-diff}",
+            };
+        }
+    }
 
     public string ScheduleCountText => SelectedDaySchedules.Count == 0
         ? "일정 없음"
