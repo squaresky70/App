@@ -328,11 +328,16 @@ public sealed partial class MainWindow : Window
     {
         // SwipeHost 가 캡처를 가져가면 자식(DayCell)이 캡처를 잃고 그 이벤트가 여기까지 올라온다.
         // 우리가 캡처를 쥐고 있는 동안에는 드래그를 끝내면 안 된다.
-        foreach (var captured in SwipeHost.PointerCaptures)
+        // PointerCaptures 는 캡처가 하나도 없으면 빈 목록이 아니라 null 을 돌려준다.
+        var captures = SwipeHost.PointerCaptures;
+        if (captures is not null)
         {
-            if (captured.PointerId == e.Pointer.PointerId)
+            foreach (var captured in captures)
             {
-                return;
+                if (captured.PointerId == e.Pointer.PointerId)
+                {
+                    return;
+                }
             }
         }
 
