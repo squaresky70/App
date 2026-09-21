@@ -37,6 +37,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--  제목  -->
@@ -54,7 +55,7 @@
             PlaceholderText="제목을 입력하세요"
             TextChanged="OnTitleChanged" />
 
-        <!--  날짜  -->
+        <!--  시작일  -->
         <Grid Grid.Row="1" ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="64" />
@@ -64,18 +65,40 @@
                 VerticalAlignment="Center"
                 FontSize="{StaticResource FontSizeCaption}"
                 Foreground="{StaticResource TextSecondaryBrush}"
-                Text="날짜" />
+                Text="시작일" />
             <CalendarDatePicker
-                x:Name="DatePickerControl"
+                x:Name="StartDatePicker"
                 Grid.Column="1"
                 HorizontalAlignment="Stretch"
                 CornerRadius="{StaticResource RadiusSm}"
+                DateChanged="OnStartDateChanged"
                 DateFormat="{}{year.full}년 {month.integer}월 {day.integer}일"
                 PlaceholderText="날짜 선택" />
         </Grid>
 
-        <!--  하루 종일 스위치  -->
+        <!--  종료일  -->
         <Grid Grid.Row="2" ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="64" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="{StaticResource FontSizeCaption}"
+                Foreground="{StaticResource TextSecondaryBrush}"
+                Text="종료일" />
+            <CalendarDatePicker
+                x:Name="EndDatePicker"
+                Grid.Column="1"
+                HorizontalAlignment="Stretch"
+                CornerRadius="{StaticResource RadiusSm}"
+                DateChanged="OnEndDateChanged"
+                DateFormat="{}{year.full}년 {month.integer}월 {day.integer}일"
+                PlaceholderText="시작일과 같음" />
+        </Grid>
+
+        <!--  하루 종일 스위치  -->
+        <Grid Grid.Row="3" ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="64" />
                 <ColumnDefinition Width="*" />
@@ -97,7 +120,7 @@
         <!--  시작 / 종료 시각  -->
         <Grid
             x:Name="TimeRow"
-            Grid.Row="3"
+            Grid.Row="4"
             ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="64" />
@@ -132,7 +155,7 @@
         </Grid>
 
         <!--  색상  -->
-        <Grid Grid.Row="4" ColumnSpacing="10">
+        <Grid Grid.Row="5" ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="64" />
                 <ColumnDefinition Width="*" />
@@ -194,7 +217,7 @@
         <!--  메모  -->
         <TextBox
             x:Name="NoteBox"
-            Grid.Row="5"
+            Grid.Row="6"
             Height="78"
             Padding="12,9"
             AcceptsReturn="True"

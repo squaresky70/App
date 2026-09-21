@@ -14,6 +14,9 @@ public sealed partial class ScheduleEditDialog : ContentDialog
     private string _colorKey = ScheduleColors.DefaultKey;
     private Dictionary<string, Border> _colorRings = null!;
 
+    /// <summary>시작일/종료일을 코드로 맞출 때 DateChanged 가 서로 물고 늘어지지 않게 한다.</summary>
+    private bool _syncingDates;
+
     /// <param name="existing">수정할 일정. null 이면 새 일정 추가 모드.</param>
     /// <param name="defaultDate">추가 모드일 때 기본 날짜.</param>
     public ScheduleEditDialog(ScheduleItem? existing, DateOnly defaultDate)
@@ -58,9 +61,12 @@ public sealed partial class ScheduleEditDialog : ContentDialog
     {
         TitleBox.Text = item.Title;
         NoteBox.Text = item.Note;
-        // 정오 + 로컬 오프셋으로 넣어 시간대 변환 때문에 날짜가 하루 밀리지 않게 한다.
-        var noon = item.Date.ToDateTime(new TimeOnly(12, 0));
-        DatePickerControl.Date = new DateTimeOffset(noon, TimeZoneInfo.Local.GetUtcOffset(noon));
+
+        _syncingDates = true;
+        StartDatePicker.Date = ToPickerDate(item.Date);
+        EndDatePicker.Date = ToPickerDate(item.EndDate < item.Date ? item.Date : item.EndDate);
+        _syncingDates = false;
+
         AllDaySwitch.IsOn = item.IsAllDay;
         StartTimePicker.Time = item.Start.ToTimeSpan();
         EndTimePicker.Time = item.End.ToTimeSpan();
@@ -87,6 +93,56 @@ public sealed partial class ScheduleEditDialog : ContentDialog
         }
     }
 
+    /// <summary>시간대 변환 때문에 날짜가 하루 밀리지 않도록 정오 + 로컬 오프셋으로 넣는다.</summary>
+    private static DateTimeOffset ToPickerDate(DateOnly date)
+    {
+        var noon = date.ToDateTime(new TimeOnly(12, 0));
+        return new DateTimeOffset(noon, TimeZoneInfo.Local.GetUtcOffset(noon));
+    }
+
+    private static DateOnly? FromPickerDate(DateTimeOffset? picked)
+        => picked is { } value ? DateOnly.FromDateTime(value.DateTime) : null;
+
+    /// <summary>시작일을 종료일보다 뒤로 옮기면 종료일도 같이 끌고 간다.</summary>
+    private void OnStartDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
+    {
+        if (_syncingDates)
+        {
+            return;
+        }
+
+        var start = FromPickerDate(args.NewDate);
+        var end = FromPickerDate(EndDatePicker.Date);
+        if (start is null || end is null || end >= start)
+        {
+            return;
+        }
+
+        _syncingDates = true;
+        EndDatePicker.Date = ToPickerDate(start.Value);
+        _syncingDates = false;
+    }
+
+    /// <summary>종료일을 시작일보다 앞으로 옮기면 시작일에 맞춘다.</summary>
+    private void OnEndDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
+    {
+        if (_syncingDates)
+        {
+            return;
+        }
+
+        var end = FromPickerDate(args.NewDate);
+        var start = FromPickerDate(StartDatePicker.Date);
+        if (start is null || end is null || end >= start)
+        {
+            return;
+        }
+
+        _syncingDates = true;
+        EndDatePicker.Date = ToPickerDate(start.Value);
+        _syncingDates = false;
+    }
+
     private void OnAllDayToggled(object sender, RoutedEventArgs e) => UpdateTimeRowVisibility();
 
     private void UpdateTimeRowVisibility()
@@ -107,9 +163,14 @@ public sealed partial class ScheduleEditDialog : ContentDialog
             return;
         }
 
-        var date = DatePickerControl.Date is { } picked
-            ? DateOnly.FromDateTime(picked.DateTime)
-            : DateOnly.FromDateTime(DateTime.Today);
+        var date = FromPickerDate(StartDatePicker.Date) ?? DateOnly.FromDateTime(DateTime.Today);
+        var endDate = FromPickerDate(EndDatePicker.Date) ?? date;
+
+        // 종료일이 시작일보다 빠르면 하루짜리로 맞춰준다.
+        if (endDate < date)
+        {
+            endDate = date;
+        }
 
         var start = TimeOnly.FromTimeSpan(StartTimePicker.Time);
         var end = TimeOnly.FromTimeSpan(EndTimePicker.Time);
@@ -121,6 +182,7 @@ public sealed partial class ScheduleEditDialog : ContentDialog
         }
 
         Result.Date = date;
+        Result.EndDate = endDate;
         Result.Title = title;
         Result.Note = NoteBox.Text.Trim();
         Result.IsAllDay = AllDaySwitch.IsOn;

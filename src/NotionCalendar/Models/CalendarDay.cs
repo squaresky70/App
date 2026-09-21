@@ -6,8 +6,8 @@ namespace NotionCalendar.Models;
 /// <summary>달력 격자의 칸 하나(42칸 중 하나). 인스턴스는 재사용되고 내용만 갱신된다.</summary>
 public sealed class CalendarDay : ObservableObject
 {
-    /// <summary>한 칸에 미리 보여줄 일정 최대 개수.</summary>
-    public const int PreviewLimit = 3;
+    /// <summary>한 칸에 보여줄 일정 줄(레인) 최대 개수.</summary>
+    public const int LaneLimit = 3;
 
     private DateOnly _date = DateOnly.FromDateTime(DateTime.Today);
     private bool _isCurrentMonth = true;
@@ -65,6 +65,9 @@ public sealed class CalendarDay : ObservableObject
 
     public bool IsSaturday => Date.DayOfWeek == DayOfWeek.Saturday;
 
-    /// <summary>칸에 표시되는 일정 미리보기. 컬렉션 인스턴스는 유지하고 내용만 교체한다.</summary>
-    public ObservableCollection<ScheduleItem> PreviewSchedules { get; } = new();
+    /// <summary>
+    /// 칸에 표시되는 일정 막대 조각들. 인덱스가 곧 레인 번호라서
+    /// 같은 주의 다른 칸과 높이가 맞는다. 컬렉션 인스턴스는 유지하고 내용만 교체한다.
+    /// </summary>
+    public ObservableCollection<ScheduleSegment> Lanes { get; } = new();
 }

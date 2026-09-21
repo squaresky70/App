@@ -10,6 +10,9 @@ namespace NotionCalendar.Services;
 /// </summary>
 public sealed class ScheduleStore
 {
+    /// <summary>한 일정이 걸칠 수 있는 최대 일수. 파일이 깨졌을 때 색인이 폭주하지 않게 한다.</summary>
+    private const int MaxSpanDays = 366;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -62,6 +65,16 @@ public sealed class ScheduleStore
                 if (string.IsNullOrEmpty(item.Id) || _byId.ContainsKey(item.Id))
                 {
                     item.Id = Guid.NewGuid().ToString("N");
+                }
+
+                // 종료일이 없던 예전 파일은 하루짜리로, 말이 안 되는 기간은 잘라서 받는다.
+                if (item.EndDate < item.Date)
+                {
+                    item.EndDate = item.Date;
+                }
+                else if (item.EndDate.DayNumber - item.Date.DayNumber > MaxSpanDays)
+                {
+                    item.EndDate = item.Date.AddDays(MaxSpanDays);
                 }
 
                 Index(item);
@@ -121,11 +134,12 @@ public sealed class ScheduleStore
             item.Id = Guid.NewGuid().ToString("N");
         }
 
+        ClampRange(item);
         Index(item);
         Commit();
     }
 
-    /// <summary>편집본의 값을 원본에 반영한다. 날짜가 바뀌면 인덱스도 옮긴다.</summary>
+    /// <summary>편집본의 값을 원본에 반영한다. 기간이 바뀌면 인덱스도 옮긴다.</summary>
     public void Update(ScheduleItem target, ScheduleItem edited)
     {
         if (!_byId.ContainsKey(target.Id))
@@ -136,20 +150,15 @@ public sealed class ScheduleStore
             return;
         }
 
-        var oldDate = target.Date;
+        var oldStart = target.Date;
+        var oldEnd = target.EndDate;
+
         target.CopyValuesFrom(edited);
+        ClampRange(target);
 
-        if (oldDate != target.Date)
+        if (oldStart != target.Date || oldEnd != target.EndDate)
         {
-            if (_byDate.TryGetValue(oldDate, out var oldList))
-            {
-                oldList.Remove(target);
-                if (oldList.Count == 0)
-                {
-                    _byDate.Remove(oldDate);
-                }
-            }
-
+            RemoveFromDateIndex(target, oldStart, oldEnd);
             AddToDateIndex(target);
         }
 
@@ -159,17 +168,17 @@ public sealed class ScheduleStore
     public void Remove(ScheduleItem item)
     {
         _byId.Remove(item.Id);
-
-        if (_byDate.TryGetValue(item.Date, out var list))
-        {
-            list.Remove(item);
-            if (list.Count == 0)
-            {
-                _byDate.Remove(item.Date);
-            }
-        }
-
+        RemoveFromDateIndex(item, item.Date, item.EndDate);
         Commit();
+    }
+
+    /// <summary>종료일이 시작일보다 앞서면 하루짜리로 맞춘다.</summary>
+    private static void ClampRange(ScheduleItem item)
+    {
+        if (item.EndDate < item.Date)
+        {
+            item.EndDate = item.Date;
+        }
     }
 
     private void Index(ScheduleItem item)
@@ -178,17 +187,38 @@ public sealed class ScheduleStore
         AddToDateIndex(item);
     }
 
+    /// <summary>시작일부터 종료일까지 모든 날짜에 걸어 둔다. 그래야 중간 날짜에서도 조회된다.</summary>
     private void AddToDateIndex(ScheduleItem item)
     {
-        if (!_byDate.TryGetValue(item.Date, out var list))
+        for (var date = item.Date; date <= item.EndDate; date = date.AddDays(1))
         {
-            list = new List<ScheduleItem>();
-            _byDate[item.Date] = list;
-        }
+            if (!_byDate.TryGetValue(date, out var list))
+            {
+                list = new List<ScheduleItem>();
+                _byDate[date] = list;
+            }
 
-        if (!list.Contains(item))
+            if (!list.Contains(item))
+            {
+                list.Add(item);
+            }
+        }
+    }
+
+    private void RemoveFromDateIndex(ScheduleItem item, DateOnly from, DateOnly to)
+    {
+        for (var date = from; date <= to; date = date.AddDays(1))
         {
-            list.Add(item);
+            if (!_byDate.TryGetValue(date, out var list))
+            {
+                continue;
+            }
+
+            list.Remove(item);
+            if (list.Count == 0)
+            {
+                _byDate.Remove(date);
+            }
         }
     }
 

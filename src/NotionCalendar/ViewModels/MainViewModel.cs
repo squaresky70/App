@@ -139,57 +139,186 @@ public sealed class MainViewModel : ObservableObject
         RefreshSelectedDaySchedules();
     }
 
-    /// <summary>42칸에 날짜와 일정 미리보기를 채운다.</summary>
+    /// <summary>42칸에 날짜와 일정 막대를 채운다. 막대 자리는 주 단위로 계산한다.</summary>
     private void RebuildGrid()
     {
         var firstOfMonth = CurrentMonth;
 
         // 그 주의 일요일부터 시작 (한국식 달력: 일 ~ 토)
-        var start = firstOfMonth.AddDays(-(int)firstOfMonth.DayOfWeek);
+        var gridStart = firstOfMonth.AddDays(-(int)firstOfMonth.DayOfWeek);
         var today = DateOnly.FromDateTime(DateTime.Today);
 
-        for (var i = 0; i < CellCount; i++)
+        for (var week = 0; week < CellCount / 7; week++)
         {
-            var date = start.AddDays(i);
-            var cell = Days[i];
+            var weekStart = gridStart.AddDays(week * 7);
+            var lanes = BuildWeekLanes(weekStart);
 
-            cell.Date = date;
-            cell.IsCurrentMonth = date.Month == firstOfMonth.Month && date.Year == firstOfMonth.Year;
-            cell.IsToday = date == today;
-            cell.IsSelected = date == SelectedDate;
+            for (var col = 0; col < 7; col++)
+            {
+                var date = weekStart.AddDays(col);
+                var cell = Days[(week * 7) + col];
 
-            var all = Store.ForDate(date);
-            SyncPreview(cell, all);
+                cell.Date = date;
+                cell.IsCurrentMonth = date.Month == firstOfMonth.Month && date.Year == firstOfMonth.Year;
+                cell.IsToday = date == today;
+                cell.IsSelected = date == SelectedDate;
+
+                SyncLanes(cell, lanes, col, date);
+            }
         }
     }
 
-    /// <summary>기존 컬렉션을 최대한 재사용해 깜빡임 없이 미리보기를 갱신한다.</summary>
-    private static void SyncPreview(CalendarDay cell, IReadOnlyList<ScheduleItem> all)
+    /// <summary>
+    /// 한 주(7칸)에 걸치는 일정들을 레인에 배치한다.
+    /// 같은 일정이 그 주 내내 같은 레인을 차지하므로 칸을 넘어가도 높이가 어긋나지 않는다.
+    /// </summary>
+    private List<ScheduleItem?[]> BuildWeekLanes(DateOnly weekStart)
     {
-        var take = Math.Min(all.Count, CalendarDay.PreviewLimit);
-        var preview = cell.PreviewSchedules;
+        var weekEnd = weekStart.AddDays(6);
 
-        for (var i = 0; i < take; i++)
+        var items = new List<ScheduleItem>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        for (var date = weekStart; date <= weekEnd; date = date.AddDays(1))
         {
-            if (i < preview.Count)
+            foreach (var item in Store.ForDate(date))
             {
-                if (!ReferenceEquals(preview[i], all[i]))
+                if (seen.Add(item.Id))
                 {
-                    preview[i] = all[i];
+                    items.Add(item);
+                }
+            }
+        }
+
+        items.Sort(CompareForLane);
+
+        var lanes = new List<ScheduleItem?[]>();
+        foreach (var item in items)
+        {
+            var from = Math.Max(0, item.Date.DayNumber - weekStart.DayNumber);
+            var to = Math.Min(6, item.EndDate.DayNumber - weekStart.DayNumber);
+
+            var lane = TakeFreeLane(lanes, from, to);
+            for (var i = from; i <= to; i++)
+            {
+                lane[i] = item;
+            }
+        }
+
+        return lanes;
+    }
+
+    /// <summary>긴 일정일수록 위 레인에 놓아야 막대가 덜 끊겨 보인다.</summary>
+    private static int CompareForLane(ScheduleItem a, ScheduleItem b)
+    {
+        var byLength = b.DayCount.CompareTo(a.DayCount);
+        if (byLength != 0)
+        {
+            return byLength;
+        }
+
+        var byStart = a.Date.CompareTo(b.Date);
+        if (byStart != 0)
+        {
+            return byStart;
+        }
+
+        var bySort = a.SortKey.CompareTo(b.SortKey);
+        return bySort != 0
+            ? bySort
+            : string.Compare(a.Title, b.Title, StringComparison.CurrentCulture);
+    }
+
+    /// <summary>from~to 구간이 비어 있는 레인을 찾고, 없으면 새 레인을 만든다.</summary>
+    private static ScheduleItem?[] TakeFreeLane(List<ScheduleItem?[]> lanes, int from, int to)
+    {
+        foreach (var lane in lanes)
+        {
+            var free = true;
+            for (var i = from; i <= to; i++)
+            {
+                if (lane[i] is not null)
+                {
+                    free = false;
+                    break;
+                }
+            }
+
+            if (free)
+            {
+                return lane;
+            }
+        }
+
+        var added = new ScheduleItem?[7];
+        lanes.Add(added);
+        return added;
+    }
+
+    /// <summary>한 칸이 그릴 막대 조각을 만든다. 기존 컬렉션을 재사용해 깜빡임을 줄인다.</summary>
+    private static void SyncLanes(CalendarDay cell, List<ScheduleItem?[]> lanes, int col, DateOnly date)
+    {
+        var segments = new List<ScheduleSegment>();
+        var shown = 0;
+        var visibleLanes = Math.Min(lanes.Count, CalendarDay.LaneLimit);
+
+        for (var lane = 0; lane < visibleLanes; lane++)
+        {
+            var item = lanes[lane][col];
+            if (item is null)
+            {
+                // 아래 레인의 높이를 옆 칸과 맞추기 위한 빈 자리.
+                segments.Add(ScheduleSegment.Empty);
+                continue;
+            }
+
+            shown++;
+            segments.Add(new ScheduleSegment(
+                item,
+                isItemStart: item.Date == date,
+                isItemEnd: item.EndDate == date,
+                showTitle: item.Date == date || col == 0));
+        }
+
+        // 맨 아래쪽 빈 레인은 높이만 차지하므로 잘라낸다.
+        while (segments.Count > 0 && ReferenceEquals(segments[^1], ScheduleSegment.Empty))
+        {
+            segments.RemoveAt(segments.Count - 1);
+        }
+
+        var total = 0;
+        foreach (var lane in lanes)
+        {
+            if (lane[col] is not null)
+            {
+                total++;
+            }
+        }
+
+        cell.MoreCount = total - shown;
+        SyncCollection(cell.Lanes, segments);
+    }
+
+    private static void SyncCollection(ObservableCollection<ScheduleSegment> target, List<ScheduleSegment> source)
+    {
+        for (var i = 0; i < source.Count; i++)
+        {
+            if (i < target.Count)
+            {
+                if (!ReferenceEquals(target[i], source[i]))
+                {
+                    target[i] = source[i];
                 }
             }
             else
             {
-                preview.Add(all[i]);
+                target.Add(source[i]);
             }
         }
 
-        while (preview.Count > take)
+        while (target.Count > source.Count)
         {
-            preview.RemoveAt(preview.Count - 1);
+            target.RemoveAt(target.Count - 1);
         }
-
-        cell.MoreCount = all.Count - take;
     }
 
     private void RefreshSelection()

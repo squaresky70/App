@@ -8,9 +8,13 @@
     xmlns:models="using:NotionCalendar.Models"
     mc:Ignorable="d">
 
+    <!--
+        좌우 안쪽 여백을 0 으로 둬야 일정 막대가 칸 끝까지 닿아 옆 칸과 이어져 보인다.
+        그래서 날짜 숫자와 "+N개" 쪽에만 따로 여백을 준다.
+    -->
     <Border
         x:Name="RootBorder"
-        Padding="5,4,5,4"
+        Padding="0,4,0,4"
         Background="Transparent"
         BorderBrush="Transparent"
         BorderThickness="1"
@@ -27,6 +31,7 @@
                 x:Name="DayBadge"
                 Height="22"
                 MinWidth="22"
+                Margin="5,0,0,0"
                 Padding="6,0"
                 HorizontalAlignment="Left"
                 Background="Transparent"
@@ -39,29 +44,38 @@
                     FontWeight="SemiBold" />
             </Border>
 
-            <Grid Grid.Row="1" Margin="0,3,0,0">
+            <!--
+                좌우 -2: 칸 테두리(1px)가 밀어낸 만큼 되돌리고 1px 더 겹친다.
+                열 너비가 소수점이라 반올림에 따라 1px 틈이 생기는데, 겹쳐 두면 그 틈이 사라진다.
+            -->
+            <Grid Grid.Row="1" Margin="-2,3,-2,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!--  일정 칩 미리보기  -->
+                <!--
+                    일정 막대. 레인마다 높이가 같아야 옆 칸과 이어져 보이므로 Height 를 고정한다.
+                    Margin 이 음수면 칸 안쪽 여백을 넘어 옆 칸의 막대와 맞닿는다.
+                -->
                 <ItemsRepeater x:Name="ChipsRepeater" VerticalAlignment="Top">
                     <ItemsRepeater.Layout>
                         <StackLayout Spacing="2" />
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
-                        <DataTemplate x:DataType="models:ScheduleItem">
+                        <DataTemplate x:DataType="models:ScheduleSegment">
                             <Border
-                                Padding="6,1,6,2"
-                                Background="{x:Bind ChipBackground, Mode=OneWay}"
-                                CornerRadius="5">
+                                Height="17"
+                                Margin="{x:Bind Margin}"
+                                Padding="{x:Bind Padding}"
+                                Background="{x:Bind Background}"
+                                CornerRadius="{x:Bind Corner}">
                                 <TextBlock
                                     FontSize="10.5"
-                                    Foreground="{x:Bind ChipForeground, Mode=OneWay}"
+                                    Foreground="{x:Bind Foreground}"
                                     LineHeight="14"
                                     MaxLines="1"
-                                    Text="{x:Bind ChipText, Mode=OneWay}"
+                                    Text="{x:Bind Text}"
                                     TextTrimming="CharacterEllipsis"
                                     TextWrapping="NoWrap" />
                             </Border>
@@ -73,7 +87,7 @@
                 <TextBlock
                     x:Name="MoreText"
                     Grid.Row="1"
-                    Margin="5,2,0,0"
+                    Margin="10,2,0,0"
                     FontSize="10"
                     Foreground="{StaticResource TextTertiaryBrush}"
                     Visibility="Collapsed" />

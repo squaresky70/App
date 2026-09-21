@@ -60,7 +60,7 @@ public sealed partial class DayCell : UserControl
         if (e.NewValue is CalendarDay newDay)
         {
             newDay.PropertyChanged += cell.OnDayPropertyChanged;
-            cell.ChipsRepeater.ItemsSource = newDay.PreviewSchedules;
+            cell.ChipsRepeater.ItemsSource = newDay.Lanes;
         }
         else
         {

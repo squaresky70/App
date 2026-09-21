@@ -4,10 +4,11 @@ using NotionCalendar.ViewModels;
 
 namespace NotionCalendar.Models;
 
-/// <summary>하루에 달리는 일정 하나.</summary>
+/// <summary>일정 하나. 시작일(<see cref="Date"/>)부터 종료일(<see cref="EndDate"/>)까지 이어질 수 있다.</summary>
 public sealed class ScheduleItem : ObservableObject
 {
     private DateOnly _date = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly _endDate = DateOnly.FromDateTime(DateTime.Today);
     private string _title = string.Empty;
     private string _note = string.Empty;
     private bool _isAllDay = true;
@@ -17,10 +18,30 @@ public sealed class ScheduleItem : ObservableObject
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
+    /// <summary>시작일. 예전 저장 파일과 호환되도록 이름은 Date 그대로 둔다.</summary>
     public DateOnly Date
     {
         get => _date;
-        set => Set(ref _date, value);
+        set
+        {
+            if (Set(ref _date, value))
+            {
+                RaiseAll(nameof(IsMultiDay), nameof(DayCount), nameof(TimeText), nameof(SortKey));
+            }
+        }
+    }
+
+    /// <summary>종료일. 하루짜리 일정이면 시작일과 같다.</summary>
+    public DateOnly EndDate
+    {
+        get => _endDate;
+        set
+        {
+            if (Set(ref _endDate, value))
+            {
+                RaiseAll(nameof(IsMultiDay), nameof(DayCount), nameof(TimeText), nameof(SortKey));
+            }
+        }
     }
 
     public string Title
@@ -98,10 +119,18 @@ public sealed class ScheduleItem : ObservableObject
     // ---- 화면 표시용 (저장 대상 아님) ----
 
     [JsonIgnore]
-    public string ChipText => IsAllDay ? Title : $"{Start:HH:mm}  {Title}";
+    public bool IsMultiDay => EndDate > Date;
 
     [JsonIgnore]
-    public string TimeText => IsAllDay ? "하루 종일" : $"{Start:HH:mm} – {End:HH:mm}";
+    public int DayCount => EndDate.DayNumber - Date.DayNumber + 1;
+
+    [JsonIgnore]
+    public string ChipText => IsAllDay || IsMultiDay ? Title : $"{Start:HH:mm}  {Title}";
+
+    [JsonIgnore]
+    public string TimeText => IsMultiDay
+        ? $"{Date.Month}월 {Date.Day}일 – {EndDate.Month}월 {EndDate.Day}일 · {DayCount}일간"
+        : IsAllDay ? "하루 종일" : $"{Start:HH:mm} – {End:HH:mm}";
 
     [JsonIgnore]
     public bool HasNote => !string.IsNullOrWhiteSpace(Note);
@@ -119,14 +148,15 @@ public sealed class ScheduleItem : ObservableObject
     [JsonIgnore]
     public Brush AccentBar => ScheduleColors.Get(ColorKey).Dot;
 
-    /// <summary>정렬 기준: 하루 종일 일정이 먼저, 그다음 시작 시각 순.</summary>
+    /// <summary>정렬 기준: 여러 날짜 일정이 가장 먼저, 그다음 하루 종일, 그다음 시작 시각 순.</summary>
     [JsonIgnore]
-    public int SortKey => IsAllDay ? -1 : (Start.Hour * 60) + Start.Minute;
+    public int SortKey => IsMultiDay ? -2 : IsAllDay ? -1 : (Start.Hour * 60) + Start.Minute;
 
     public ScheduleItem Clone() => new()
     {
         Id = Id,
         Date = Date,
+        EndDate = EndDate,
         Title = Title,
         Note = Note,
         IsAllDay = IsAllDay,
@@ -139,6 +169,7 @@ public sealed class ScheduleItem : ObservableObject
     public void CopyValuesFrom(ScheduleItem other)
     {
         Date = other.Date;
+        EndDate = other.EndDate;
         Title = other.Title;
         Note = other.Note;
         IsAllDay = other.IsAllDay;
