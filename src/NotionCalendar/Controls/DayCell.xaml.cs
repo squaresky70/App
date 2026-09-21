@@ -83,10 +83,22 @@ public sealed partial class DayCell : UserControl
             RootBorder.Background = Transparent;
             RootBorder.BorderBrush = Transparent;
             MoreText.Visibility = Visibility.Collapsed;
+            HolidayText.Visibility = Visibility.Collapsed;
             return;
         }
 
         DayText.Text = day.DayNumber;
+
+        // --- 공휴일 이름 ---
+        if (day.IsHoliday)
+        {
+            HolidayText.Text = day.HolidayName;
+            HolidayText.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            HolidayText.Visibility = Visibility.Collapsed;
+        }
 
         // --- 배경 / 테두리 ---
         if (day.IsSelected)
@@ -118,6 +130,10 @@ public sealed partial class DayCell : UserControl
             if (!day.IsCurrentMonth)
             {
                 DayText.Foreground = Res("TextTertiaryBrush");
+            }
+            else if (day.IsHoliday)
+            {
+                DayText.Foreground = Res("HolidayBrush");
             }
             else if (day.IsSunday)
             {

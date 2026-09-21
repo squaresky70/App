@@ -60,7 +60,12 @@ public sealed class MainViewModel : ObservableObject
         {
             if (Set(ref _selectedDate, value))
             {
-                RaiseAll(nameof(SelectedDateTitle), nameof(SelectedWeekdayTitle), nameof(SelectedDateDiffText));
+                RaiseAll(
+                    nameof(SelectedDateTitle),
+                    nameof(SelectedWeekdayTitle),
+                    nameof(SelectedDateDiffText),
+                    nameof(SelectedHolidayName),
+                    nameof(SelectedHolidayVisibility));
                 RefreshSelection();
                 RefreshSelectedDaySchedules();
             }
@@ -74,6 +79,13 @@ public sealed class MainViewModel : ObservableObject
     public string SelectedDateTitle => $"{SelectedDate.Month}월 {SelectedDate.Day}일";
 
     public string SelectedWeekdayTitle => WeekdayNames[(int)SelectedDate.DayOfWeek];
+
+    /// <summary>선택한 날이 공휴일이면 그 이름.</summary>
+    public string SelectedHolidayName => KoreanHolidays.NameFor(SelectedDate) ?? string.Empty;
+
+    public Microsoft.UI.Xaml.Visibility SelectedHolidayVisibility => SelectedHolidayName.Length == 0
+        ? Microsoft.UI.Xaml.Visibility.Collapsed
+        : Microsoft.UI.Xaml.Visibility.Visible;
 
     /// <summary>오늘과 선택한 날짜의 차이. 오늘이면 "오늘", 미래면 "D-n", 과거면 "D+n".</summary>
     public string SelectedDateDiffText
@@ -162,6 +174,7 @@ public sealed class MainViewModel : ObservableObject
                 cell.IsCurrentMonth = date.Month == firstOfMonth.Month && date.Year == firstOfMonth.Year;
                 cell.IsToday = date == today;
                 cell.IsSelected = date == SelectedDate;
+                cell.HolidayName = KoreanHolidays.NameFor(date);
 
                 SyncLanes(cell, lanes, col, date);
             }

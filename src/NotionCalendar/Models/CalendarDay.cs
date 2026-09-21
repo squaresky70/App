@@ -14,6 +14,7 @@ public sealed class CalendarDay : ObservableObject
     private bool _isToday;
     private bool _isSelected;
     private int _moreCount;
+    private string? _holidayName;
 
     public DateOnly Date
     {
@@ -44,6 +45,21 @@ public sealed class CalendarDay : ObservableObject
         get => _isSelected;
         set => Set(ref _isSelected, value);
     }
+
+    /// <summary>공휴일이면 그 이름(예: 추석, 대체공휴일). 평일이면 null.</summary>
+    public string? HolidayName
+    {
+        get => _holidayName;
+        set
+        {
+            if (Set(ref _holidayName, value))
+            {
+                Raise(nameof(IsHoliday));
+            }
+        }
+    }
+
+    public bool IsHoliday => !string.IsNullOrEmpty(_holidayName);
 
     public int MoreCount
     {

@@ -26,23 +26,42 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!--  날짜 숫자 (오늘이면 동그란 강조 배경)  -->
-            <Border
-                x:Name="DayBadge"
-                Height="22"
-                MinWidth="22"
-                Margin="5,0,0,0"
-                Padding="6,0"
-                HorizontalAlignment="Left"
-                Background="Transparent"
-                CornerRadius="11">
+            <!--  날짜 숫자 (오늘이면 동그란 강조 배경) + 공휴일 이름  -->
+            <Grid Margin="5,0,4,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    x:Name="DayBadge"
+                    Height="22"
+                    MinWidth="22"
+                    Padding="6,0"
+                    HorizontalAlignment="Left"
+                    Background="Transparent"
+                    CornerRadius="11">
+                    <TextBlock
+                        x:Name="DayText"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontWeight="SemiBold" />
+                </Border>
+
                 <TextBlock
-                    x:Name="DayText"
-                    HorizontalAlignment="Center"
+                    x:Name="HolidayText"
+                    Grid.Column="1"
+                    Margin="3,0,0,0"
                     VerticalAlignment="Center"
-                    FontSize="12"
-                    FontWeight="SemiBold" />
-            </Border>
+                    FontSize="10"
+                    FontWeight="SemiBold"
+                    Foreground="{StaticResource HolidayBrush}"
+                    MaxLines="1"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="NoWrap"
+                    Visibility="Collapsed" />
+            </Grid>
 
             <!--
                 좌우 -2: 칸 테두리(1px)가 밀어낸 만큼 되돌리고 1px 더 겹친다.

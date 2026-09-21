@@ -240,6 +240,17 @@
                                 FontSize="12"
                                 Foreground="{StaticResource TextTertiaryBrush}"
                                 Text="{x:Bind VM.ScheduleCountText, Mode=OneWay}" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{StaticResource TextTertiaryBrush}"
+                                Text="·"
+                                Visibility="{x:Bind VM.SelectedHolidayVisibility, Mode=OneWay}" />
+                            <TextBlock
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource HolidayBrush}"
+                                Text="{x:Bind VM.SelectedHolidayName, Mode=OneWay}"
+                                Visibility="{x:Bind VM.SelectedHolidayVisibility, Mode=OneWay}" />
                         </StackPanel>
                     </StackPanel>
 

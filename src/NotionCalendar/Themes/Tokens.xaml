@@ -20,6 +20,8 @@
     <SolidColorBrush x:Key="SundayBrush" Color="#D9737A" />
     <SolidColorBrush x:Key="SaturdayBrush" Color="#6E8BC4" />
     <SolidColorBrush x:Key="DangerBrush" Color="#E03E3E" />
+    <!--  관공서 공휴일(쉬는 날) 표시용 빨강  -->
+    <SolidColorBrush x:Key="HolidayBrush" Color="#E03E3E" />
 
     <!--  ============ 라운드 값 ============  -->
     <CornerRadius x:Key="RadiusSm">6</CornerRadius>
