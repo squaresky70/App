@@ -27,6 +27,9 @@ public sealed class AppSettings
 
     public int? WidgetHeight { get; set; }
 
+    /// <summary>위젯 유리 배경의 투명도(%). 0 이 가장 진하고 100 이 가장 투명하다.</summary>
+    public int WidgetTransparency { get; set; } = 50;
+
     public static AppSettings Load()
     {
         try

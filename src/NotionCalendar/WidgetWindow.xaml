@@ -13,6 +13,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--  머리: 여기를 끌어서 위젯을 옮긴다  -->
@@ -89,8 +90,39 @@
         <Grid
             x:Name="DaysGrid"
             Grid.Row="2"
-            Margin="8,0,8,8"
+            Margin="8,0,8,0"
             Background="Transparent"
             PointerWheelChanged="OnPointerWheelChanged" />
+
+        <!--  오른쪽 아래: 유리 배경 투명도  -->
+        <StackPanel
+            Grid.Row="3"
+            Margin="0,2,14,6"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8"
+            ToolTipService.ToolTip="위젯 배경 투명도">
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="11"
+                Foreground="{StaticResource GlassTextTertiaryBrush}"
+                Text="투명도" />
+            <Slider
+                x:Name="TransparencySlider"
+                Width="120"
+                VerticalAlignment="Center"
+                IsThumbToolTipEnabled="False"
+                Maximum="100"
+                Minimum="0"
+                StepFrequency="5"
+                ValueChanged="OnTransparencyChanged" />
+            <TextBlock
+                x:Name="TransparencyText"
+                Width="32"
+                VerticalAlignment="Center"
+                FontSize="11"
+                Foreground="{StaticResource GlassTextSecondaryBrush}"
+                TextAlignment="Right" />
+        </StackPanel>
     </Grid>
 </Window>

@@ -14,6 +14,34 @@ namespace NotionCalendar.Controls;
 public sealed class GlassBackdrop : SystemBackdrop
 {
     private DesktopAcrylicController? _controller;
+    private double _transparency = 0.5;
+
+    /// <summary>
+    /// 유리 배경의 투명도(0 = 가장 진하게, 1 = 가장 투명하게). 실행 중에 바꿔도 곧바로 반영된다.
+    /// 1 이어도 어느 정도 어두운 색은 남긴다. 뒤에 흰 창이나 밝은 바탕화면이 있을 때
+    /// 흰 글자가 배경에 묻혀 읽히지 않는 것을 막기 위해서다.
+    /// </summary>
+    public double Transparency
+    {
+        get => _transparency;
+        set
+        {
+            _transparency = Math.Clamp(value, 0, 1);
+            Apply();
+        }
+    }
+
+    private void Apply()
+    {
+        if (_controller is null)
+        {
+            return;
+        }
+
+        var density = (float)(1 - _transparency);
+        _controller.TintOpacity = 0.35f + (0.6f * density);
+        _controller.LuminosityOpacity = 0.3f + (0.6f * density);
+    }
 
     protected override void OnTargetConnected(ICompositionSupportsSystemBackdrop connectedTarget, XamlRoot xamlRoot)
     {
@@ -22,11 +50,10 @@ public sealed class GlassBackdrop : SystemBackdrop
         _controller = new DesktopAcrylicController
         {
             TintColor = Color.FromArgb(255, 14, 30, 58),
-            TintOpacity = 0.45f,
-            LuminosityOpacity = 0.35f,
             FallbackColor = Color.FromArgb(235, 18, 34, 62),
         };
 
+        Apply();
         _controller.AddSystemBackdropTarget(connectedTarget);
         _controller.SetSystemBackdropConfiguration(new SystemBackdropConfiguration
         {

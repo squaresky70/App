@@ -35,6 +35,7 @@ public sealed partial class WidgetWindow : Window
     private readonly DayCell[] _cells = new DayCell[MainViewModel.CellCount];
     private readonly DispatcherQueueTimer _saveTimer;
     private readonly DispatcherQueueTimer _dayTimer;
+    private readonly GlassBackdrop _backdrop = new();
 
     private DateTime _lastToday = DateTime.Today;
     private int _wheelAccumulator;
@@ -47,7 +48,7 @@ public sealed partial class WidgetWindow : Window
         VM = new MainViewModel(App.Store);
 
         Title = "캘린더 위젯";
-        SystemBackdrop = new GlassBackdrop();
+        SystemBackdrop = _backdrop;
 
         // 제목 표시줄은 없애고 크기 조절용 테두리만 남긴다.
         if (AppWindow.Presenter is OverlappedPresenter presenter)
@@ -77,6 +78,10 @@ public sealed partial class WidgetWindow : Window
         _dayTimer.Interval = TimeSpan.FromMinutes(1);
         _dayTimer.Tick += (_, _) => RefreshIfDayChanged();
         _dayTimer.Start();
+
+        // 저장 타이머를 만든 뒤에 넣어야 ValueChanged 에서 바로 쓸 수 있다.
+        TransparencySlider.Value = Math.Clamp(App.Settings.WidgetTransparency, 0, 100);
+        ApplyTransparency(TransparencySlider.Value);
 
         Activated += OnActivated;
         Closed += OnClosed;
@@ -157,6 +162,33 @@ public sealed partial class WidgetWindow : Window
 
         ReleaseCapture();
         SendMessage(_hwnd, WmNcLButtonDown, (IntPtr)HtCaption, IntPtr.Zero);
+    }
+
+    // ================= 투명도 =================
+
+    private void OnTransparencyChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        // 생성자에서 처음 값을 넣을 때도 불리는데, 그때는 아직 타이머가 없다.
+        if (_saveTimer is null)
+        {
+            return;
+        }
+
+        ApplyTransparency(e.NewValue);
+        App.Settings.WidgetTransparency = (int)Math.Round(e.NewValue);
+        _saveTimer.Stop();
+        _saveTimer.Start();
+    }
+
+    /// <summary>유리 배경과 그 위에 깐 옅은 색을 함께 조절한다. 글자 색은 건드리지 않는다.</summary>
+    private void ApplyTransparency(double percent)
+    {
+        var transparency = Math.Clamp(percent, 0, 100) / 100d;
+        _backdrop.Transparency = transparency;
+
+        var overlayAlpha = (byte)Math.Round(0x20 + (0x40 * (1 - transparency)));
+        RootGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(overlayAlpha, 10, 20, 40));
+        TransparencyText.Text = $"{Math.Round(percent)}%";
     }
 
     // ================= 달력 =================
