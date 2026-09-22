@@ -109,6 +109,76 @@
         </Setter>
     </Style>
 
+    <!--
+        글자처럼 보이는 버튼 (헤더의 월·연도·D-Day, 월/연도 선택 칸).
+        평소엔 배경이 없고, 마우스를 올리면 옅은 배경이 깔려 누를 수 있다는 걸 알려준다.
+    -->
+    <Style x:Key="ChipButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="Padding" Value="6,2" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid
+                        x:Name="Root"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <ContentPresenter
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}"
+                            Foreground="{TemplateBinding Foreground}" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource BgHoverBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource BorderBrushStrong}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Root"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="0.3"
+                                            Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--  월/연도 선택 팝업 겉모양  -->
+    <Style x:Key="PickerFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+        <Setter Property="Background" Value="{StaticResource BgCanvasBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
     <!--  연한 테두리 보조 버튼 ("오늘" 등)  -->
     <Style x:Key="SubtleButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource BgCanvasBrush}" />

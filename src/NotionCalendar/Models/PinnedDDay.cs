@@ -6,6 +6,7 @@ public sealed class PinnedDDay
     public PinnedDDay(int rank, ScheduleItem item, int daysLeft)
     {
         Rank = rank;
+        Date = item.Date;
         Title = item.Title;
         DaysLeft = daysLeft;
         DDayText = daysLeft switch
@@ -18,6 +19,9 @@ public sealed class PinnedDDay
     }
 
     public int Rank { get; }
+
+    /// <summary>일정 시작일. 누르면 달력이 이 날짜로 이동한다.</summary>
+    public DateOnly Date { get; }
 
     public string Title { get; }
 

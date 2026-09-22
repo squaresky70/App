@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
@@ -152,6 +153,205 @@ public sealed partial class MainWindow : Window
 
         _ = RunMonthTransitionAsync(direction, VM.GoToToday);
     }
+
+    // ================= 헤더에서 바로 이동 (월/연도 선택 표, 주요 일정 D-Day) =================
+
+    /// <summary>연도 선택 표가 다룰 범위.</summary>
+    private const int MinPickerYear = 1900;
+    private const int MaxPickerYear = 2100;
+
+    /// <summary>한 페이지에 보여줄 연도 수(4열 × 3줄).</summary>
+    private const int YearsPerPage = 12;
+
+    /// <summary>주요 일정 D-Day 를 누르면 그 일정 날짜로 달력을 옮기고 선택한다.</summary>
+    private void OnPinnedDDayClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: PinnedDDay dday })
+        {
+            SelectDate(dday.Date);
+        }
+    }
+
+    private void OnMonthTitleClick(object sender, RoutedEventArgs e)
+    {
+        var flyout = CreatePickerFlyout();
+        var grid = CreateCellGrid();
+        var shown = VM.CurrentMonth;
+
+        for (var m = 1; m <= 12; m++)
+        {
+            var month = m;
+            var cell = CreatePickerCell($"{m}월", month == shown.Month);
+            cell.Click += (_, _) =>
+            {
+                flyout.Hide();
+                JumpToMonth(new DateOnly(shown.Year, month, 1));
+            };
+
+            Grid.SetRow(cell, (m - 1) / 4);
+            Grid.SetColumn(cell, (m - 1) % 4);
+            grid.Children.Add(cell);
+        }
+
+        flyout.Content = grid;
+        flyout.ShowAt((FrameworkElement)sender);
+    }
+
+    private void OnYearTitleClick(object sender, RoutedEventArgs e)
+    {
+        var flyout = CreatePickerFlyout();
+
+        // 지금 보고 있는 해가 가운데쯤 오도록 페이지를 시작한다.
+        ShowYearPage(flyout, VM.CurrentMonth.Year - 5);
+        flyout.ShowAt((FrameworkElement)sender);
+    }
+
+    /// <summary>연도 12개 한 페이지를 그린다. ‹ › 로 12년씩 넘긴다.</summary>
+    private void ShowYearPage(Flyout flyout, int firstYear)
+    {
+        firstYear = Math.Clamp(firstYear, MinPickerYear, MaxPickerYear - YearsPerPage + 1);
+        var lastYear = firstYear + YearsPerPage - 1;
+        var shownYear = VM.CurrentMonth.Year;
+
+        var root = new Grid { RowSpacing = 8 };
+        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        // 윗줄: ‹  2021 – 2032  ›
+        var header = new Grid();
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var prev = CreatePageButton("", "이전 12년");
+        prev.IsEnabled = firstYear > MinPickerYear;
+        prev.Click += (_, _) => ShowYearPage(flyout, firstYear - YearsPerPage);
+
+        var range = new TextBlock
+        {
+            Text = $"{firstYear} – {lastYear}",
+            FontSize = 12,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            Foreground = Res("TextSecondaryBrush"),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        var next = CreatePageButton("", "다음 12년");
+        next.IsEnabled = lastYear < MaxPickerYear;
+        next.Click += (_, _) => ShowYearPage(flyout, firstYear + YearsPerPage);
+
+        Grid.SetColumn(range, 1);
+        Grid.SetColumn(next, 2);
+        header.Children.Add(prev);
+        header.Children.Add(range);
+        header.Children.Add(next);
+
+        var grid = CreateCellGrid();
+        Grid.SetRow(grid, 1);
+
+        for (var i = 0; i < YearsPerPage; i++)
+        {
+            var year = firstYear + i;
+            var cell = CreatePickerCell($"{year}", year == shownYear);
+            cell.Click += (_, _) =>
+            {
+                flyout.Hide();
+                JumpToMonth(new DateOnly(year, VM.CurrentMonth.Month, 1));
+            };
+
+            Grid.SetRow(cell, i / 4);
+            Grid.SetColumn(cell, i % 4);
+            grid.Children.Add(cell);
+        }
+
+        root.Children.Add(header);
+        root.Children.Add(grid);
+        flyout.Content = root;
+    }
+
+    /// <summary>보고 있는 달을 target 달로 옮긴다(선택한 날짜는 그대로 둔다).</summary>
+    private void JumpToMonth(DateOnly target)
+    {
+        var delta = ((target.Year - VM.CurrentMonth.Year) * 12) + (target.Month - VM.CurrentMonth.Month);
+        if (delta == 0)
+        {
+            return;
+        }
+
+        if (_isAnimating)
+        {
+            // 전환 중이면 애니메이션은 건너뛰고 바로 옮긴다(클릭이 무시되지 않게).
+            VM.EnsureMonthVisible(target);
+            return;
+        }
+
+        _ = RunMonthTransitionAsync(Math.Sign(delta), () => VM.EnsureMonthVisible(target));
+    }
+
+    /// <summary>
+    /// 선택 표는 팝업(Flyout) 안에 뜬다. 팝업 안에서는 ItemsRepeater/ItemsControl 이 항목을 그리지 못했으므로
+    /// 칸 버튼을 Grid 에 직접 배치한다.
+    /// </summary>
+    private static Flyout CreatePickerFlyout() => new()
+    {
+        Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft,
+        FlyoutPresenterStyle = (Style)Application.Current.Resources["PickerFlyoutPresenterStyle"],
+    };
+
+    private static Grid CreateCellGrid()
+    {
+        var grid = new Grid { ColumnSpacing = 4, RowSpacing = 4 };
+        for (var c = 0; c < 4; c++)
+        {
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        }
+
+        for (var r = 0; r < 3; r++)
+        {
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        }
+
+        return grid;
+    }
+
+    /// <summary>선택 표의 칸 하나. 지금 보고 있는 달/해는 파랗게 표시한다.</summary>
+    private static Button CreatePickerCell(string text, bool isCurrent)
+    {
+        var cell = new Button
+        {
+            Content = text,
+            Width = 64,
+            Height = 34,
+            FontSize = 13,
+            Style = (Style)Application.Current.Resources["ChipButtonStyle"],
+        };
+
+        if (isCurrent)
+        {
+            cell.Background = Res("AccentSoftBrush");
+            cell.Foreground = Res("AccentBrush");
+            cell.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold;
+        }
+
+        return cell;
+    }
+
+    private static Button CreatePageButton(string glyph, string toolTip)
+    {
+        var button = new Button
+        {
+            Content = glyph,
+            FontFamily = (FontFamily)Application.Current.Resources["SymbolThemeFontFamily"],
+            FontSize = 11,
+            Style = (Style)Application.Current.Resources["GhostIconButtonStyle"],
+        };
+
+        ToolTipService.SetToolTip(button, toolTip);
+        return button;
+    }
+
+    private static Brush Res(string key) => (Brush)Application.Current.Resources[key];
 
     /// <param name="delta">-1 이전 달, +1 다음 달.</param>
     private Task GoToMonthAsync(int delta)

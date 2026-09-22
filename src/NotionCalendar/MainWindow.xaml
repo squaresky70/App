@@ -59,19 +59,34 @@
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Spacing="8">
-                        <TextBlock
+                        <!--  월: 누르면 1~12월 선택 표  -->
+                        <Button
+                            Margin="-6,0,-6,0"
+                            Padding="6,0"
                             VerticalAlignment="Bottom"
-                            FontSize="{StaticResource FontSizeTitle}"
-                            FontWeight="Bold"
-                            Foreground="{StaticResource TextPrimaryBrush}"
-                            Text="{x:Bind VM.MonthTitle, Mode=OneWay}" />
-                        <TextBlock
-                            Margin="0,0,0,2"
+                            Click="OnMonthTitleClick"
+                            Style="{StaticResource ChipButtonStyle}"
+                            ToolTipService.ToolTip="월 선택">
+                            <TextBlock
+                                FontSize="{StaticResource FontSizeTitle}"
+                                FontWeight="Bold"
+                                Foreground="{StaticResource TextPrimaryBrush}"
+                                Text="{x:Bind VM.MonthTitle, Mode=OneWay}" />
+                        </Button>
+                        <!--  연도: 누르면 연도 선택 표  -->
+                        <Button
+                            Margin="0,0,-4,1"
+                            Padding="4,1"
                             VerticalAlignment="Bottom"
-                            FontSize="14"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource TextTertiaryBrush}"
-                            Text="{x:Bind VM.YearTitle, Mode=OneWay}" />
+                            Click="OnYearTitleClick"
+                            Style="{StaticResource ChipButtonStyle}"
+                            ToolTipService.ToolTip="연도 선택">
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource TextTertiaryBrush}"
+                                Text="{x:Bind VM.YearTitle, Mode=OneWay}" />
+                        </Button>
                         <TextBlock
                             Margin="2,0,0,2"
                             VerticalAlignment="Bottom"
@@ -93,34 +108,41 @@
                             VerticalAlignment="Bottom"
                             ItemsSource="{x:Bind VM.HeaderDDays}">
                             <ItemsRepeater.Layout>
-                                <StackLayout Orientation="Horizontal" Spacing="14" />
+                                <StackLayout Orientation="Horizontal" Spacing="4" />
                             </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
+                                <!--
+                                    누르면 그 일정 날짜로 달력을 옮기고 선택한다.
+                                    ItemsRepeater + x:Bind 템플릿은 DataContext 를 채우지 않으므로 직접 넣어 준다.
+                                -->
                                 <DataTemplate x:DataType="models:PinnedDDay">
-                                    <StackPanel
+                                    <Button
+                                        Padding="5,0"
                                         VerticalAlignment="Bottom"
-                                        Background="Transparent"
-                                        Orientation="Horizontal"
-                                        Spacing="5"
+                                        Click="OnPinnedDDayClick"
+                                        DataContext="{x:Bind}"
+                                        Style="{StaticResource ChipButtonStyle}"
                                         ToolTipService.ToolTip="{x:Bind ToolTip}">
-                                        <TextBlock
-                                            VerticalAlignment="Bottom"
-                                            FontSize="18"
-                                            FontWeight="Bold"
-                                            Foreground="{StaticResource AccentBrush}"
-                                            Text="{x:Bind DDayText}" />
-                                        <TextBlock
-                                            MaxWidth="130"
-                                            Margin="0,0,0,2"
-                                            VerticalAlignment="Bottom"
-                                            FontSize="11.5"
-                                            FontWeight="SemiBold"
-                                            Foreground="{StaticResource TextSecondaryBrush}"
-                                            MaxLines="1"
-                                            Text="{x:Bind Title}"
-                                            TextTrimming="CharacterEllipsis"
-                                            TextWrapping="NoWrap" />
-                                    </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <TextBlock
+                                                VerticalAlignment="Bottom"
+                                                FontSize="18"
+                                                FontWeight="Bold"
+                                                Foreground="{StaticResource AccentBrush}"
+                                                Text="{x:Bind DDayText}" />
+                                            <TextBlock
+                                                MaxWidth="130"
+                                                Margin="0,0,0,2"
+                                                VerticalAlignment="Bottom"
+                                                FontSize="11.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{StaticResource TextSecondaryBrush}"
+                                                MaxLines="1"
+                                                Text="{x:Bind Title}"
+                                                TextTrimming="CharacterEllipsis"
+                                                TextWrapping="NoWrap" />
+                                        </StackPanel>
+                                    </Button>
                                 </DataTemplate>
                             </ItemsRepeater.ItemTemplate>
                         </ItemsRepeater>
