@@ -511,6 +511,17 @@ public sealed partial class MainWindow : Window
     /// </summary>
     private void OnDeleteButtonTapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;
 
+    /// <summary>헤더에 D-Day 로 띄울 주요 일정을 지정하거나 해제한다.</summary>
+    private void OnPinScheduleClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: ScheduleItem item })
+        {
+            _store.TogglePin(item);
+        }
+    }
+
+    private void OnPinButtonTapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;
+
     private async Task ShowScheduleDialogAsync(ScheduleItem? existing, DateOnly date)
     {
         if (Content?.XamlRoot is null)

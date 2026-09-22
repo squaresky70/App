@@ -15,6 +15,7 @@ public sealed class ScheduleItem : ObservableObject
     private TimeOnly _start = new(9, 0);
     private TimeOnly _end = new(10, 0);
     private string _colorKey = ScheduleColors.DefaultKey;
+    private bool _isPinned;
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
@@ -116,6 +117,19 @@ public sealed class ScheduleItem : ObservableObject
         }
     }
 
+    /// <summary>헤더에 D-Day 로 띄울 주요 일정인지. 한 번에 하나만 지정된다.</summary>
+    public bool IsPinned
+    {
+        get => _isPinned;
+        set
+        {
+            if (Set(ref _isPinned, value))
+            {
+                RaiseAll(nameof(PinGlyph), nameof(PinBrush));
+            }
+        }
+    }
+
     // ---- 화면 표시용 (저장 대상 아님) ----
 
     [JsonIgnore]
@@ -148,6 +162,14 @@ public sealed class ScheduleItem : ObservableObject
     [JsonIgnore]
     public Brush AccentBar => ScheduleColors.Get(ColorKey).Dot;
 
+    /// <summary>주요 일정이면 채운 별, 아니면 빈 별.</summary>
+    [JsonIgnore]
+    public string PinGlyph => IsPinned ? "" : "";
+
+    [JsonIgnore]
+    public Brush PinBrush => (Brush)Microsoft.UI.Xaml.Application.Current.Resources[
+        IsPinned ? "AccentBrush" : "TextTertiaryBrush"];
+
     /// <summary>정렬 기준: 여러 날짜 일정이 가장 먼저, 그다음 하루 종일, 그다음 시작 시각 순.</summary>
     [JsonIgnore]
     public int SortKey => IsMultiDay ? -2 : IsAllDay ? -1 : (Start.Hour * 60) + Start.Minute;
@@ -163,9 +185,13 @@ public sealed class ScheduleItem : ObservableObject
         Start = Start,
         End = End,
         ColorKey = ColorKey,
+        IsPinned = IsPinned,
     };
 
-    /// <summary>편집 다이얼로그에서 수정한 값을 원본에 반영한다.</summary>
+    /// <summary>
+    /// 편집 다이얼로그에서 수정한 값을 원본에 반영한다.
+    /// 주요 일정 지정(IsPinned)은 다이얼로그에서 다루지 않으므로 건드리지 않는다.
+    /// </summary>
     public void CopyValuesFrom(ScheduleItem other)
     {
         Date = other.Date;

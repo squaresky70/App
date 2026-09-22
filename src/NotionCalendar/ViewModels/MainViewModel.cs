@@ -88,19 +88,31 @@ public sealed class MainViewModel : ObservableObject
         : Microsoft.UI.Xaml.Visibility.Visible;
 
     /// <summary>오늘과 선택한 날짜의 차이. 오늘이면 "오늘", 미래면 "D-n", 과거면 "D+n".</summary>
-    public string SelectedDateDiffText
+    public string SelectedDateDiffText => DaysFromToday(SelectedDate) switch
     {
-        get
+        0 => "오늘",
+        > 0 and var diff => $"D-{diff}",
+        var diff => $"D+{-diff}",
+    };
+
+    /// <summary>주요 일정으로 지정한 일정의 D-Day. 시작일 기준으로 센다.</summary>
+    public string PinnedDDayText => Store.Pinned is { } pinned
+        ? DaysFromToday(pinned.Date) switch
         {
-            var diff = SelectedDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
-            return diff switch
-            {
-                0 => "오늘",
-                > 0 => $"D-{diff}",
-                _ => $"D+{-diff}",
-            };
+            0 => "D-DAY",
+            > 0 and var diff => $"D-{diff}",
+            var diff => $"D+{-diff}",
         }
-    }
+        : string.Empty;
+
+    public string PinnedTitle => Store.Pinned?.Title ?? string.Empty;
+
+    public Microsoft.UI.Xaml.Visibility PinnedVisibility => Store.Pinned is null
+        ? Microsoft.UI.Xaml.Visibility.Collapsed
+        : Microsoft.UI.Xaml.Visibility.Visible;
+
+    private static int DaysFromToday(DateOnly date)
+        => date.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
 
     public string ScheduleCountText => SelectedDaySchedules.Count == 0
         ? "일정 없음"
@@ -149,6 +161,7 @@ public sealed class MainViewModel : ObservableObject
     {
         RebuildGrid();
         RefreshSelectedDaySchedules();
+        RaiseAll(nameof(PinnedDDayText), nameof(PinnedTitle), nameof(PinnedVisibility));
     }
 
     /// <summary>42칸에 날짜와 일정 막대를 채운다. 막대 자리는 주 단위로 계산한다.</summary>

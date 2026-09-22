@@ -79,6 +79,34 @@
                             FontWeight="SemiBold"
                             Foreground="{StaticResource TextTertiaryBrush}"
                             Text="{x:Bind VM.SelectedDateDiffText, Mode=OneWay}" />
+
+                        <!--  주요 일정 D-Day (우측 패널에서 ☆ 를 눌러 지정)  -->
+                        <Border
+                            Width="1"
+                            Height="16"
+                            Margin="6,0,2,3"
+                            VerticalAlignment="Bottom"
+                            Background="{StaticResource BorderBrushStrong}"
+                            Visibility="{x:Bind VM.PinnedVisibility, Mode=OneWay}" />
+                        <TextBlock
+                            VerticalAlignment="Bottom"
+                            FontSize="18"
+                            FontWeight="Bold"
+                            Foreground="{StaticResource AccentBrush}"
+                            Text="{x:Bind VM.PinnedDDayText, Mode=OneWay}"
+                            Visibility="{x:Bind VM.PinnedVisibility, Mode=OneWay}" />
+                        <TextBlock
+                            Margin="0,0,0,2"
+                            MaxWidth="220"
+                            VerticalAlignment="Bottom"
+                            FontSize="11.5"
+                            FontWeight="SemiBold"
+                            Foreground="{StaticResource TextSecondaryBrush}"
+                            MaxLines="1"
+                            Text="{x:Bind VM.PinnedTitle, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap"
+                            Visibility="{x:Bind VM.PinnedVisibility, Mode=OneWay}" />
                     </StackPanel>
 
                     <StackPanel
@@ -322,16 +350,28 @@
                                                         Visibility="{x:Bind NoteVisibility, Mode=OneWay}" />
                                                 </StackPanel>
 
-                                                <Button
+                                                <StackPanel
                                                     Grid.Column="2"
                                                     VerticalAlignment="Top"
-                                                    Click="OnDeleteScheduleClick"
-                                                    Content="&#xE74D;"
-                                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                                    FontSize="12"
-                                                    Style="{StaticResource GhostIconButtonStyle}"
-                                                    Tapped="OnDeleteButtonTapped"
-                                                    ToolTipService.ToolTip="삭제" />
+                                                    Orientation="Horizontal">
+                                                    <Button
+                                                        Click="OnPinScheduleClick"
+                                                        Content="{x:Bind PinGlyph, Mode=OneWay}"
+                                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                        FontSize="12"
+                                                        Foreground="{x:Bind PinBrush, Mode=OneWay}"
+                                                        Style="{StaticResource GhostIconButtonStyle}"
+                                                        Tapped="OnPinButtonTapped"
+                                                        ToolTipService.ToolTip="주요 일정(D-Day)으로 지정" />
+                                                    <Button
+                                                        Click="OnDeleteScheduleClick"
+                                                        Content="&#xE74D;"
+                                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                        FontSize="12"
+                                                        Style="{StaticResource GhostIconButtonStyle}"
+                                                        Tapped="OnDeleteButtonTapped"
+                                                        ToolTipService.ToolTip="삭제" />
+                                                </StackPanel>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
