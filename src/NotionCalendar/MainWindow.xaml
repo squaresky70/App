@@ -159,31 +159,13 @@
                             Visibility="{x:Bind VM.HiddenDDayVisibility, Mode=OneWay}" />
                     </StackPanel>
 
-                    <StackPanel
+                    <Button
                         Grid.Column="1"
                         VerticalAlignment="Center"
-                        Orientation="Horizontal"
-                        Spacing="6">
-                        <Button
-                            Click="OnTodayClick"
-                            Content="오늘"
-                            Style="{StaticResource SubtleButtonStyle}"
-                            ToolTipService.ToolTip="오늘로 이동 (Ctrl+T)" />
-                        <Button
-                            Click="OnPrevMonthClick"
-                            Content="&#xE76B;"
-                            FontFamily="{StaticResource SymbolThemeFontFamily}"
-                            FontSize="11"
-                            Style="{StaticResource GhostIconButtonStyle}"
-                            ToolTipService.ToolTip="이전 달 (Ctrl+←)" />
-                        <Button
-                            Click="OnNextMonthClick"
-                            Content="&#xE76C;"
-                            FontFamily="{StaticResource SymbolThemeFontFamily}"
-                            FontSize="11"
-                            Style="{StaticResource GhostIconButtonStyle}"
-                            ToolTipService.ToolTip="다음 달 (Ctrl+→)" />
-                    </StackPanel>
+                        Click="OnTodayClick"
+                        Content="오늘"
+                        Style="{StaticResource SubtleButtonStyle}"
+                        ToolTipService.ToolTip="오늘로 이동 (Ctrl+T)" />
                 </Grid>
 
                 <!--  요일 머리글  -->

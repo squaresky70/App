@@ -134,10 +134,6 @@ public sealed partial class MainWindow : Window
 
     // ================= 달 이동 =================
 
-    private void OnPrevMonthClick(object sender, RoutedEventArgs e) => _ = GoToMonthAsync(-1);
-
-    private void OnNextMonthClick(object sender, RoutedEventArgs e) => _ = GoToMonthAsync(1);
-
     private void OnTodayClick(object sender, RoutedEventArgs e) => GoToToday();
 
     private void GoToToday()
