@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="NotionCalendar.WidgetWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  바탕화면 위젯: 어두운 반투명 유리 위에 흰 글자  -->
+    <Grid
+        x:Name="RootGrid"
+        Background="#140A1428"
+        RequestedTheme="Dark">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  머리: 여기를 끌어서 위젯을 옮긴다  -->
+        <Grid
+            x:Name="DragBar"
+            Padding="14,8,8,6"
+            Background="Transparent"
+            PointerPressed="OnDragBarPointerPressed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="2">
+                <TextBlock
+                    x:Name="MonthLabel"
+                    Margin="0,0,8,0"
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Foreground="{StaticResource GlassTextPrimaryBrush}" />
+                <Button
+                    Click="OnPrevClick"
+                    Content="&#xE76B;"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    FontSize="10"
+                    Style="{StaticResource GlassButtonStyle}"
+                    ToolTipService.ToolTip="이전 달" />
+                <Button
+                    Click="OnNextClick"
+                    Content="&#xE76C;"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    FontSize="10"
+                    Style="{StaticResource GlassButtonStyle}"
+                    ToolTipService.ToolTip="다음 달" />
+                <Button
+                    Click="OnTodayClick"
+                    Content="오늘"
+                    Style="{StaticResource GlassButtonStyle}" />
+            </StackPanel>
+
+            <StackPanel
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="2">
+                <Button
+                    Click="OnOpenAppClick"
+                    Content="&#xE8A7;"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    FontSize="12"
+                    Style="{StaticResource GlassButtonStyle}"
+                    ToolTipService.ToolTip="캘린더 앱 열기" />
+                <Button
+                    Click="OnCloseClick"
+                    Content="&#xE711;"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    FontSize="11"
+                    Style="{StaticResource GlassButtonStyle}"
+                    ToolTipService.ToolTip="위젯 닫기" />
+            </StackPanel>
+        </Grid>
+
+        <!--  요일 머리글  -->
+        <Grid
+            x:Name="WeekdayRow"
+            Grid.Row="1"
+            Margin="8,0,8,4" />
+
+        <!--  날짜 격자 (마우스 휠로 달 넘기기)  -->
+        <Grid
+            x:Name="DaysGrid"
+            Grid.Row="2"
+            Margin="8,0,8,8"
+            Background="Transparent"
+            PointerWheelChanged="OnPointerWheelChanged" />
+    </Grid>
+</Window>

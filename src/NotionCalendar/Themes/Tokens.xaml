@@ -23,6 +23,23 @@
     <!--  관공서 공휴일(쉬는 날) 표시용 빨강  -->
     <SolidColorBrush x:Key="HolidayBrush" Color="#E03E3E" />
 
+    <!--
+        ============ 바탕화면 위젯(어두운 유리) 색 ============
+        DayCell 은 GlassStyle 이면 위 키 이름 앞에 "Glass" 를 붙인 키를 찾는다.
+    -->
+    <SolidColorBrush x:Key="GlassTextPrimaryBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="GlassTextSecondaryBrush" Color="#D9FFFFFF" />
+    <SolidColorBrush x:Key="GlassTextTertiaryBrush" Color="#8CFFFFFF" />
+    <SolidColorBrush x:Key="GlassTextOnAccentBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="GlassAccentBrush" Color="#FF3D9BFF" />
+    <SolidColorBrush x:Key="GlassBgHoverBrush" Color="#1AFFFFFF" />
+    <SolidColorBrush x:Key="GlassBgSelectedBrush" Color="#26FFFFFF" />
+    <SolidColorBrush x:Key="GlassPressedBrush" Color="#40FFFFFF" />
+    <SolidColorBrush x:Key="GlassLineBrush" Color="#26FFFFFF" />
+    <SolidColorBrush x:Key="GlassSundayBrush" Color="#FFFFAAB0" />
+    <SolidColorBrush x:Key="GlassSaturdayBrush" Color="#FFAFC6FF" />
+    <SolidColorBrush x:Key="GlassHolidayBrush" Color="#FFFF8A80" />
+
     <!--  ============ 라운드 값 ============  -->
     <CornerRadius x:Key="RadiusSm">6</CornerRadius>
     <CornerRadius x:Key="RadiusMd">10</CornerRadius>
@@ -158,6 +175,56 @@
                                             Storyboard.TargetProperty="Opacity"
                                             To="0.3"
                                             Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--  위젯(어두운 유리) 위의 글자/아이콘 버튼. 흰 글자에 맞춰 hover 도 반투명 흰색.  -->
+    <Style x:Key="GlassButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource GlassTextSecondaryBrush}" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="MinWidth" Value="30" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid
+                        x:Name="Root"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <ContentPresenter
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}"
+                            Foreground="{TemplateBinding Foreground}" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource GlassBgSelectedBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource GlassPressedBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </VisualState>
                             </VisualStateGroup>

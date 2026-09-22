@@ -30,6 +30,7 @@
             <Grid Margin="5,0,4,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -49,9 +50,18 @@
                         FontWeight="SemiBold" />
                 </Border>
 
+                <!--  음력 날짜 (바탕화면 위젯에서만 보인다)  -->
+                <TextBlock
+                    x:Name="LunarText"
+                    Grid.Column="1"
+                    Margin="2,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="9.5"
+                    Visibility="Collapsed" />
+
                 <TextBlock
                     x:Name="HolidayText"
-                    Grid.Column="1"
+                    Grid.Column="2"
                     Margin="3,0,0,0"
                     VerticalAlignment="Center"
                     FontSize="10"

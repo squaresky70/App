@@ -30,6 +30,32 @@ public static class KoreanHolidays
     public static string? NameFor(DateOnly date)
         => ForYear(date.Year).TryGetValue(date, out var name) ? name : null;
 
+    /// <summary>양력 날짜의 음력 월.일 (예: "8.15", 윤달이면 "윤4.3"). 계산할 수 없는 날이면 null.</summary>
+    public static string? LunarText(DateOnly date)
+    {
+        try
+        {
+            var dateTime = date.ToDateTime(new TimeOnly(12, 0));
+            var year = Lunar.GetYear(dateTime);
+            var month = Lunar.GetMonth(dateTime);
+            var day = Lunar.GetDayOfMonth(dateTime);
+
+            // 윤달이 있는 해는 윤달부터 달 번호가 한 칸씩 밀려 있다.
+            var leapMonth = Lunar.GetLeapMonth(year);
+            var isLeap = leapMonth > 0 && month == leapMonth;
+            if (leapMonth > 0 && month >= leapMonth)
+            {
+                month--;
+            }
+
+            return $"{(isLeap ? "윤" : string.Empty)}{month}.{day}";
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
     public static IReadOnlyDictionary<DateOnly, string> ForYear(int year)
     {
         if (Cache.TryGetValue(year, out var cached))

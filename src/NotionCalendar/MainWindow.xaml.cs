@@ -34,7 +34,7 @@ public sealed partial class MainWindow : Window
 
     private readonly DayCell[] _cells = new DayCell[MainViewModel.CellCount];
     private readonly CompositeTransform _slide = new();
-    private readonly ScheduleStore _store = new();
+    private readonly ScheduleStore _store = App.Store;
 
     private Storyboard? _activeStoryboard;
     private bool _isAnimating;
@@ -51,7 +51,7 @@ public sealed partial class MainWindow : Window
 
     public MainWindow()
     {
-        _store.Load();
+        // 일정은 App 이 한 번만 불러 두고, 본 창과 위젯이 같은 저장소를 함께 쓴다.
         VM = new MainViewModel(_store);
 
         InitializeComponent();
@@ -67,9 +67,29 @@ public sealed partial class MainWindow : Window
         BuildCalendarGrid();
         BindCells();
         RegisterAccelerators();
+
+        UpdateWidgetButton();
+        App.WidgetStateChanged += OnWidgetStateChanged;
+        Closed += (_, _) =>
+        {
+            App.WidgetStateChanged -= OnWidgetStateChanged;
+            VM.Detach();
+        };
     }
 
     public MainViewModel VM { get; }
+
+    /// <summary>위젯에서 날짜를 두 번 누르면 본 창이 그 날짜로 이동한다.</summary>
+    public void ShowDate(DateOnly date) => SelectDate(date);
+
+    // ================= 바탕화면 위젯 =================
+
+    private void OnWidgetButtonClick(object sender, RoutedEventArgs e) => App.ToggleWidget();
+
+    private void OnWidgetStateChanged(object? sender, EventArgs e) => UpdateWidgetButton();
+
+    private void UpdateWidgetButton()
+        => WidgetButtonText.Text = App.IsWidgetOpen ? "위젯 닫기" : "위젯 추가";
 
     // ================= 달력 격자 구성 =================
 

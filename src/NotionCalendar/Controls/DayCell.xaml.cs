@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using NotionCalendar.Models;
+using NotionCalendar.Services;
 using Windows.Foundation;
 
 namespace NotionCalendar.Controls;
@@ -72,7 +73,15 @@ public sealed partial class DayCell : UserControl
 
     private void OnDayPropertyChanged(object? sender, PropertyChangedEventArgs e) => ApplyVisuals();
 
-    private Brush Res(string key) => (Brush)Application.Current.Resources[key];
+    /// <summary>
+    /// 바탕화면 위젯(어두운 반투명 유리) 위에 그릴 때 켠다. 흰 글자 계열 색을 쓰고 음력 날짜를 함께 보여준다.
+    /// Day 를 넣기 전에 정해야 한다.
+    /// </summary>
+    public bool GlassStyle { get; set; }
+
+    /// <summary>GlassStyle 이면 같은 이름 앞에 "Glass" 가 붙은 색을 쓴다(Tokens.xaml).</summary>
+    private Brush Res(string key)
+        => (Brush)Application.Current.Resources[GlassStyle ? "Glass" + key : key];
 
     private void ApplyVisuals()
     {
@@ -84,15 +93,30 @@ public sealed partial class DayCell : UserControl
             RootBorder.BorderBrush = Transparent;
             MoreText.Visibility = Visibility.Collapsed;
             HolidayText.Visibility = Visibility.Collapsed;
+            LunarText.Visibility = Visibility.Collapsed;
             return;
         }
 
         DayText.Text = day.DayNumber;
 
+        // --- 음력 날짜 (위젯에서만) ---
+        // 칸이 좁아 공휴일 이름과 함께 두면 둘 다 잘리므로, 공휴일인 날은 공휴일 이름을 우선한다.
+        if (GlassStyle && !day.IsHoliday && KoreanHolidays.LunarText(day.Date) is { } lunar)
+        {
+            LunarText.Text = $"(음){lunar}";
+            LunarText.Foreground = Res("TextTertiaryBrush");
+            LunarText.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            LunarText.Visibility = Visibility.Collapsed;
+        }
+
         // --- 공휴일 이름 ---
         if (day.IsHoliday)
         {
             HolidayText.Text = day.HolidayName;
+            HolidayText.Foreground = Res("HolidayBrush");
             HolidayText.Visibility = Visibility.Visible;
         }
         else
@@ -156,6 +180,7 @@ public sealed partial class DayCell : UserControl
         if (day.MoreCount > 0)
         {
             MoreText.Text = day.MoreText;
+            MoreText.Foreground = Res("TextTertiaryBrush");
             MoreText.Visibility = Visibility.Visible;
         }
         else

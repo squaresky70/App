@@ -28,11 +28,20 @@ public sealed class MainViewModel : ObservableObject
             Days.Add(new CalendarDay());
         }
 
-        Store.Changed += (_, _) => Refresh();
+        _storeChanged = (_, _) => Refresh();
+        Store.Changed += _storeChanged;
         Refresh();
     }
 
+    private readonly EventHandler _storeChanged;
+
     public ScheduleStore Store { get; }
+
+    /// <summary>
+    /// 저장소는 본 창과 위젯이 함께 쓰므로, 창을 닫을 때 이벤트 구독을 끊어
+    /// 닫힌 창의 화면을 계속 갱신하지 않게 한다.
+    /// </summary>
+    public void Detach() => Store.Changed -= _storeChanged;
 
     /// <summary>42개의 칸. 인스턴스는 고정, 내용만 바뀐다.</summary>
     public List<CalendarDay> Days { get; } = new(CellCount);

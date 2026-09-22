@@ -14,22 +14,55 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!--  ================= 커스텀 타이틀바 =================  -->
-        <Grid
-            x:Name="AppTitleBar"
-            Height="44"
-            Padding="20,0">
-            <StackPanel
+        <!--
+            ================= 커스텀 타이틀바 =================
+            끌어서 창을 옮기는 영역(AppTitleBar)은 버튼 오른쪽부터다.
+            제목 표시줄로 지정된 영역 위의 버튼은 클릭을 받지 못하므로 버튼과 겹치지 않게 칸을 나눴다.
+        -->
+        <Grid Height="44">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                Margin="20,0,10,0"
                 VerticalAlignment="Center"
-                Orientation="Horizontal"
-                Spacing="8">
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontSize="12.5"
-                    FontWeight="SemiBold"
-                    Foreground="{StaticResource TextSecondaryBrush}"
-                    Text="캘린더" />
-            </StackPanel>
+                FontSize="12.5"
+                FontWeight="SemiBold"
+                Foreground="{StaticResource TextSecondaryBrush}"
+                Text="캘린더" />
+
+            <Button
+                x:Name="WidgetButton"
+                Grid.Column="1"
+                Padding="8,3"
+                VerticalAlignment="Center"
+                Click="OnWidgetButtonClick"
+                Style="{StaticResource ChipButtonStyle}"
+                ToolTipService.ToolTip="바탕화면에 달력 위젯을 띄웁니다">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="11"
+                        Foreground="{StaticResource TextSecondaryBrush}"
+                        Text="&#xE71D;" />
+                    <TextBlock
+                        x:Name="WidgetButtonText"
+                        VerticalAlignment="Center"
+                        FontSize="11.5"
+                        FontWeight="SemiBold"
+                        Foreground="{StaticResource TextSecondaryBrush}"
+                        Text="위젯 추가" />
+                </StackPanel>
+            </Button>
+
+            <Grid
+                x:Name="AppTitleBar"
+                Grid.Column="2"
+                Background="Transparent" />
         </Grid>
 
         <!--  ================= 본문 =================  -->
