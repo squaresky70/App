@@ -79,23 +79,6 @@ public sealed class ScheduleStore
 
                 Index(item);
             }
-
-            // 주요 일정은 하나만 남긴다(파일이 손으로 고쳐진 경우 대비).
-            var seenPin = false;
-            foreach (var item in _byId.Values)
-            {
-                if (!item.IsPinned)
-                {
-                    continue;
-                }
-
-                if (seenPin)
-                {
-                    item.IsPinned = false;
-                }
-
-                seenPin = true;
-            }
         }
         catch (Exception ex)
         {
@@ -144,34 +127,14 @@ public sealed class ScheduleStore
     public int CountForDate(DateOnly date)
         => _byDate.TryGetValue(date, out var list) ? list.Count : 0;
 
-    /// <summary>헤더에 D-Day 로 띄울 주요 일정. 지정한 게 없으면 null.</summary>
-    public ScheduleItem? Pinned
-    {
-        get
-        {
-            foreach (var item in _byId.Values)
-            {
-                if (item.IsPinned)
-                {
-                    return item;
-                }
-            }
+    /// <summary>주요 일정(D-Day)으로 지정된 일정 전부. 여러 개일 수 있다.</summary>
+    public IReadOnlyList<ScheduleItem> PinnedItems
+        => _byId.Values.Where(item => item.IsPinned).ToList();
 
-            return null;
-        }
-    }
-
-    /// <summary>주요 일정을 지정하거나 해제한다. 지정은 한 번에 하나만 유지한다.</summary>
+    /// <summary>주요 일정 지정을 켜거나 끈다. 개수 제한은 없다.</summary>
     public void TogglePin(ScheduleItem item)
     {
-        var pin = !item.IsPinned;
-
-        foreach (var other in _byId.Values)
-        {
-            other.IsPinned = false;
-        }
-
-        item.IsPinned = pin;
+        item.IsPinned = !item.IsPinned;
         Commit();
     }
 

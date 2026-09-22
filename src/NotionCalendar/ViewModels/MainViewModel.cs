@@ -95,21 +95,24 @@ public sealed class MainViewModel : ObservableObject
         var diff => $"D+{-diff}",
     };
 
-    /// <summary>주요 일정으로 지정한 일정의 D-Day. 시작일 기준으로 센다.</summary>
-    public string PinnedDDayText => Store.Pinned is { } pinned
-        ? DaysFromToday(pinned.Date) switch
-        {
-            0 => "D-DAY",
-            > 0 and var diff => $"D-{diff}",
-            var diff => $"D+{-diff}",
-        }
-        : string.Empty;
+    /// <summary>상단에 한꺼번에 보여줄 주요 일정 D-Day 최대 개수.</summary>
+    public const int HeaderDDayLimit = 3;
 
-    public string PinnedTitle => Store.Pinned?.Title ?? string.Empty;
+    /// <summary>디데이가 가까운 순으로 매긴 상위 주요 일정(최대 3개). 헤더가 그대로 그린다.</summary>
+    public ObservableCollection<PinnedDDay> HeaderDDays { get; } = new();
 
-    public Microsoft.UI.Xaml.Visibility PinnedVisibility => Store.Pinned is null
+    private int _hiddenDDayCount;
+
+    public Microsoft.UI.Xaml.Visibility PinnedVisibility => HeaderDDays.Count == 0
         ? Microsoft.UI.Xaml.Visibility.Collapsed
         : Microsoft.UI.Xaml.Visibility.Visible;
+
+    /// <summary>3개를 넘어 헤더에 못 올린 주요 일정 수. 예: "+2".</summary>
+    public string HiddenDDayText => $"+{_hiddenDDayCount}";
+
+    public Microsoft.UI.Xaml.Visibility HiddenDDayVisibility => _hiddenDDayCount > 0
+        ? Microsoft.UI.Xaml.Visibility.Visible
+        : Microsoft.UI.Xaml.Visibility.Collapsed;
 
     private static int DaysFromToday(DateOnly date)
         => date.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
@@ -161,7 +164,30 @@ public sealed class MainViewModel : ObservableObject
     {
         RebuildGrid();
         RefreshSelectedDaySchedules();
-        RaiseAll(nameof(PinnedDDayText), nameof(PinnedTitle), nameof(PinnedVisibility));
+        RefreshHeaderDDays();
+    }
+
+    /// <summary>
+    /// 주요 일정에 우선순위를 매긴다: 아직 오지 않은 일정(오늘 포함)이 먼저, 그 안에서 디데이가 가까운 순.
+    /// 이미 지난 일정은 그 뒤로, 최근에 지난 것부터. 상위 3개만 헤더에 올린다.
+    /// </summary>
+    private void RefreshHeaderDDays()
+    {
+        var ranked = Store.PinnedItems
+            .Select(item => (Item: item, Days: DaysFromToday(item.Date)))
+            .OrderBy(x => x.Days < 0 ? 1 : 0)
+            .ThenBy(x => Math.Abs(x.Days))
+            .ThenBy(x => x.Item.Title, StringComparer.CurrentCulture)
+            .ToList();
+
+        HeaderDDays.Clear();
+        for (var i = 0; i < ranked.Count && i < HeaderDDayLimit; i++)
+        {
+            HeaderDDays.Add(new PinnedDDay(i + 1, ranked[i].Item, ranked[i].Days));
+        }
+
+        _hiddenDDayCount = ranked.Count - HeaderDDays.Count;
+        RaiseAll(nameof(PinnedVisibility), nameof(HiddenDDayText), nameof(HiddenDDayVisibility));
     }
 
     /// <summary>42칸에 날짜와 일정 막대를 채운다. 막대 자리는 주 단위로 계산한다.</summary>
