@@ -56,13 +56,21 @@ public partial class App : Application
         Store.Load();
         Settings = AppSettings.Load();
 
+        // 윈도우 시작프로그램으로 실행되면(--widget) 본창 없이 위젯만 띄운다.
+        var widgetOnly = Environment.GetCommandLineArgs()
+            .Skip(1)
+            .Any(arg => string.Equals(arg, StartupRegistration.WidgetArgument, StringComparison.OrdinalIgnoreCase));
+
         // 위젯을 켜 둔 채로 끝났으면 다시 띄운다. 본 창이 그 앞에 오도록 위젯을 먼저 연다.
-        if (Settings.WidgetOpen)
+        if (Settings.WidgetOpen || widgetOnly)
         {
             OpenWidget();
         }
 
-        ShowMainWindow();
+        if (!widgetOnly)
+        {
+            ShowMainWindow();
+        }
     }
 
     /// <summary>본 창을 앞으로 불러온다. 닫혀 있으면 새로 연다. date 를 주면 그 날짜로 이동한다.</summary>
@@ -120,6 +128,9 @@ public partial class App : Application
             Widget = null;
             Settings.WidgetOpen = false;
             Settings.Save();
+
+            // 위젯을 닫았으면 다음 부팅 때 저절로 뜨지 않게 시작프로그램 등록도 지운다.
+            StartupRegistration.Disable();
             WidgetStateChanged?.Invoke(null, EventArgs.Empty);
         };
 
@@ -128,6 +139,9 @@ public partial class App : Application
 
         Settings.WidgetOpen = true;
         Settings.Save();
+
+        // 컴퓨터를 다시 켜도 위젯이 저절로 뜨도록 등록한다.
+        StartupRegistration.Enable();
         WidgetStateChanged?.Invoke(null, EventArgs.Empty);
     }
 
