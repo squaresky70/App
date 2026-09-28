@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Window
     x:Class="NotionCalendar.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -358,8 +358,10 @@
 
                     <!--  일정 목록  -->
                     <Grid Grid.Row="2">
+                        <!--  HorizontalScrollMode 만으로는 측정 폭이 무한이라 카드 안의 * 열이 0 이 된다. 뷰포트 폭을 실제로 제한한다.  -->
                         <ScrollViewer
                             Padding="0,0,4,0"
+                            HorizontalScrollBarVisibility="Disabled"
                             HorizontalScrollMode="Disabled"
                             VerticalScrollBarVisibility="Auto">
                             <ItemsRepeater x:Name="ScheduleList">
@@ -379,28 +381,63 @@
                                             Tapped="OnScheduleCardTapped">
                                             <Grid ColumnSpacing="10">
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="3" />
+                                                    <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
 
-                                                <!--  색상 막대  -->
+                                                <!--  일정은 색상 막대, 할 일은 체크 상자  -->
                                                 <Border
                                                     Width="3"
                                                     MinHeight="30"
                                                     VerticalAlignment="Stretch"
                                                     Background="{x:Bind AccentBar, Mode=OneWay}"
-                                                    CornerRadius="2" />
+                                                    CornerRadius="2"
+                                                    Visibility="{x:Bind ColorBarVisibility, Mode=OneWay}" />
+                                                <Button
+                                                    Width="22"
+                                                    Height="22"
+                                                    VerticalAlignment="Top"
+                                                    Click="OnToggleTodoClick"
+                                                    Content="{x:Bind CheckGlyph, Mode=OneWay}"
+                                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                    FontSize="15"
+                                                    Foreground="{x:Bind CheckBrush, Mode=OneWay}"
+                                                    Style="{StaticResource GhostIconButtonStyle}"
+                                                    Tapped="OnTodoButtonTapped"
+                                                    ToolTipService.ToolTip="완료 표시"
+                                                    Visibility="{x:Bind TodoVisibility, Mode=OneWay}" />
 
                                                 <StackPanel Grid.Column="1" Spacing="3">
-                                                    <TextBlock
-                                                        FontSize="13.5"
-                                                        FontWeight="SemiBold"
-                                                        Foreground="{StaticResource TextPrimaryBrush}"
-                                                        MaxLines="2"
-                                                        Text="{x:Bind Title, Mode=OneWay}"
-                                                        TextTrimming="CharacterEllipsis"
-                                                        TextWrapping="Wrap" />
+                                                    <!--  제목이 길어도 "완료" 배지가 밀려나지 않도록 Grid 로 자리를 나눈다.  -->
+                                                    <Grid ColumnSpacing="6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock
+                                                            FontSize="13.5"
+                                                            FontWeight="SemiBold"
+                                                            Foreground="{x:Bind TitleBrush, Mode=OneWay}"
+                                                            MaxLines="2"
+                                                            Text="{x:Bind Title, Mode=OneWay}"
+                                                            TextDecorations="{x:Bind TitleDecorations, Mode=OneWay}"
+                                                            TextTrimming="CharacterEllipsis"
+                                                            TextWrapping="Wrap" />
+                                                        <Border
+                                                            Grid.Column="1"
+                                                            Padding="5,1"
+                                                            VerticalAlignment="Top"
+                                                            Background="{StaticResource AccentSoftBrush}"
+                                                            CornerRadius="4"
+                                                            Visibility="{x:Bind DoneMarkVisibility, Mode=OneWay}">
+                                                            <TextBlock
+                                                                FontSize="10"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="{StaticResource AccentBrush}"
+                                                                Text="완료" />
+                                                        </Border>
+                                                    </Grid>
                                                     <TextBlock
                                                         FontSize="11.5"
                                                         Foreground="{StaticResource TextSecondaryBrush}"

@@ -16,6 +16,8 @@ public sealed class ScheduleItem : ObservableObject
     private TimeOnly _end = new(10, 0);
     private string _colorKey = ScheduleColors.DefaultKey;
     private bool _isPinned;
+    private ScheduleKind _kind = ScheduleKind.Event;
+    private bool _isDone;
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
@@ -117,6 +119,42 @@ public sealed class ScheduleItem : ObservableObject
         }
     }
 
+    /// <summary>일정인지 할 일인지.</summary>
+    public ScheduleKind Kind
+    {
+        get => _kind;
+        set
+        {
+            if (Set(ref _kind, value))
+            {
+                RaiseAll(
+                    nameof(IsTodo),
+                    nameof(TodoVisibility),
+                    nameof(ColorBarVisibility),
+                    nameof(TitleBrush),
+                    nameof(TitleDecorations));
+            }
+        }
+    }
+
+    /// <summary>할 일을 끝냈는지. 일정에는 쓰이지 않는다.</summary>
+    public bool IsDone
+    {
+        get => _isDone;
+        set
+        {
+            if (Set(ref _isDone, value))
+            {
+                RaiseAll(
+                    nameof(CheckGlyph),
+                    nameof(CheckBrush),
+                    nameof(TitleBrush),
+                    nameof(TitleDecorations),
+                    nameof(DoneMarkVisibility));
+            }
+        }
+    }
+
     /// <summary>헤더에 D-Day 로 띄울 주요 일정인지. 한 번에 하나만 지정된다.</summary>
     public bool IsPinned
     {
@@ -170,6 +208,44 @@ public sealed class ScheduleItem : ObservableObject
     public Brush PinBrush => (Brush)Microsoft.UI.Xaml.Application.Current.Resources[
         IsPinned ? "AccentBrush" : "TextTertiaryBrush"];
 
+    // ---- 할 일 표시용 ----
+
+    [JsonIgnore]
+    public bool IsTodo => Kind == ScheduleKind.Todo;
+
+    /// <summary>할 일이면 체크 상자를, 일정이면 색상 막대를 보여준다.</summary>
+    [JsonIgnore]
+    public Microsoft.UI.Xaml.Visibility TodoVisibility
+        => IsTodo ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+
+    [JsonIgnore]
+    public Microsoft.UI.Xaml.Visibility ColorBarVisibility
+        => IsTodo ? Microsoft.UI.Xaml.Visibility.Collapsed : Microsoft.UI.Xaml.Visibility.Visible;
+
+    /// <summary>빈 체크 상자 / 체크된 상자.</summary>
+    [JsonIgnore]
+    public string CheckGlyph => IsDone ? "" : "";
+
+    [JsonIgnore]
+    public Brush CheckBrush => (Brush)Microsoft.UI.Xaml.Application.Current.Resources[
+        IsDone ? "AccentBrush" : "TextTertiaryBrush"];
+
+    /// <summary>끝낸 할 일은 노션처럼 글자를 흐리게 하고 가운데 줄을 긋는다.</summary>
+    [JsonIgnore]
+    public Brush TitleBrush => (Brush)Microsoft.UI.Xaml.Application.Current.Resources[
+        IsTodo && IsDone ? "TextTertiaryBrush" : "TextPrimaryBrush"];
+
+    [JsonIgnore]
+    public Windows.UI.Text.TextDecorations TitleDecorations => IsTodo && IsDone
+        ? Windows.UI.Text.TextDecorations.Strikethrough
+        : Windows.UI.Text.TextDecorations.None;
+
+    /// <summary>우측 목록에서 끝낸 할 일 옆에 붙는 "완료" 표시.</summary>
+    [JsonIgnore]
+    public Microsoft.UI.Xaml.Visibility DoneMarkVisibility => IsTodo && IsDone
+        ? Microsoft.UI.Xaml.Visibility.Visible
+        : Microsoft.UI.Xaml.Visibility.Collapsed;
+
     /// <summary>정렬 기준: 여러 날짜 일정이 가장 먼저, 그다음 하루 종일, 그다음 시작 시각 순.</summary>
     [JsonIgnore]
     public int SortKey => IsMultiDay ? -2 : IsAllDay ? -1 : (Start.Hour * 60) + Start.Minute;
@@ -186,6 +262,8 @@ public sealed class ScheduleItem : ObservableObject
         End = End,
         ColorKey = ColorKey,
         IsPinned = IsPinned,
+        Kind = Kind,
+        IsDone = IsDone,
     };
 
     /// <summary>
@@ -202,5 +280,6 @@ public sealed class ScheduleItem : ObservableObject
         Start = other.Start;
         End = other.End;
         ColorKey = other.ColorKey;
+        Kind = other.Kind;
     }
 }

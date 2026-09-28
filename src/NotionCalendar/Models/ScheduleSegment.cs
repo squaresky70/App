@@ -24,6 +24,7 @@ public sealed class ScheduleSegment
         Background = TransparentBrush;
         Foreground = TransparentBrush;
         Text = string.Empty;
+        CheckGlyph = string.Empty;
     }
 
     /// <param name="isItemStart">이 칸이 일정의 시작일인가.</param>
@@ -46,6 +47,12 @@ public sealed class ScheduleSegment
         // 이어지는 쪽은 여백 0 → 옆 칸의 막대와 그대로 붙는다.
         Margin = new Thickness(isItemStart ? CapInset : 0, 0, isItemEnd ? CapInset : 0, 0);
         Padding = new Thickness(isItemStart ? 6 : 4, 1, isItemEnd ? 6 : 4, 2);
+
+        // 할 일은 제목을 적는 칸에만 체크 상자를 붙이고, 끝냈으면 줄을 긋고 흐리게 한다.
+        CheckGlyph = item.CheckGlyph;
+        CheckVisibility = item.IsTodo && showTitle ? Visibility.Visible : Visibility.Collapsed;
+        Decorations = item.TitleDecorations;
+        ContentOpacity = item.IsTodo && item.IsDone ? 0.55 : 1;
     }
 
     public ScheduleItem? Item { get; }
@@ -61,4 +68,13 @@ public sealed class ScheduleSegment
     public Thickness Margin { get; }
 
     public Thickness Padding { get; } = new(6, 1, 6, 2);
+
+    /// <summary>할 일 체크 상자(빈/체크됨).</summary>
+    public string CheckGlyph { get; }
+
+    public Visibility CheckVisibility { get; } = Visibility.Collapsed;
+
+    public Windows.UI.Text.TextDecorations Decorations { get; } = Windows.UI.Text.TextDecorations.None;
+
+    public double ContentOpacity { get; } = 1;
 }

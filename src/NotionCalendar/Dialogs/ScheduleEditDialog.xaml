@@ -38,12 +38,50 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+
+        <!--  종류: 일정 / 할 일  -->
+        <Grid Grid.Row="0" ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="64" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="{StaticResource FontSizeCaption}"
+                Foreground="{StaticResource TextSecondaryBrush}"
+                Text="종류" />
+            <StackPanel
+                Grid.Column="1"
+                Orientation="Horizontal"
+                Spacing="6">
+                <Button
+                    x:Name="EventKindButton"
+                    Click="OnKindEventClick"
+                    Content="일정"
+                    Style="{StaticResource SubtleButtonStyle}" />
+                <Button
+                    x:Name="TodoKindButton"
+                    AutomationProperties.Name="할 일"
+                    Click="OnKindTodoClick"
+                    Style="{StaticResource SubtleButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            FontSize="12"
+                            Text="&#xE739;" />
+                        <TextBlock VerticalAlignment="Center" Text="할 일" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
 
         <!--  제목  -->
         <TextBox
             x:Name="TitleBox"
-            Grid.Row="0"
+            Grid.Row="1"
             Padding="12,10"
             Background="{StaticResource BgSubtleBrush}"
             BorderBrush="{StaticResource BorderBrushStrong}"
@@ -56,7 +94,7 @@
             TextChanged="OnTitleChanged" />
 
         <!--  시작일  -->
-        <Grid Grid.Row="1" ColumnSpacing="10">
+        <Grid Grid.Row="2" ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="64" />
                 <ColumnDefinition Width="*" />
@@ -77,7 +115,7 @@
         </Grid>
 
         <!--  종료일  -->
-        <Grid Grid.Row="2" ColumnSpacing="10">
+        <Grid Grid.Row="3" ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="64" />
                 <ColumnDefinition Width="*" />
@@ -98,7 +136,7 @@
         </Grid>
 
         <!--  하루 종일 스위치  -->
-        <Grid Grid.Row="3" ColumnSpacing="10">
+        <Grid Grid.Row="4" ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="64" />
                 <ColumnDefinition Width="*" />
@@ -120,7 +158,7 @@
         <!--  시작 / 종료 시각  -->
         <Grid
             x:Name="TimeRow"
-            Grid.Row="4"
+            Grid.Row="5"
             ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="64" />
@@ -155,7 +193,7 @@
         </Grid>
 
         <!--  색상  -->
-        <Grid Grid.Row="5" ColumnSpacing="10">
+        <Grid Grid.Row="6" ColumnSpacing="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="64" />
                 <ColumnDefinition Width="*" />
@@ -217,7 +255,7 @@
         <!--  메모  -->
         <TextBox
             x:Name="NoteBox"
-            Grid.Row="6"
+            Grid.Row="7"
             Height="78"
             Padding="12,9"
             AcceptsReturn="True"

@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using NotionCalendar.Models;
 
 namespace NotionCalendar.Dialogs;
@@ -12,6 +13,7 @@ namespace NotionCalendar.Dialogs;
 public sealed partial class ScheduleEditDialog : ContentDialog
 {
     private string _colorKey = ScheduleColors.DefaultKey;
+    private ScheduleKind _kind = ScheduleKind.Event;
     private Dictionary<string, Border> _colorRings = null!;
 
     /// <summary>시작일/종료일을 코드로 맞출 때 DateChanged 가 서로 물고 늘어지지 않게 한다.</summary>
@@ -72,9 +74,31 @@ public sealed partial class ScheduleEditDialog : ContentDialog
         EndTimePicker.Time = item.End.ToTimeSpan();
 
         SelectColor(item.ColorKey);
+        SelectKind(item.Kind);
         UpdateTimeRowVisibility();
         UpdateSaveEnabled();
     }
+
+    /// <summary>고른 종류를 파란 배경으로 표시한다.</summary>
+    private void SelectKind(ScheduleKind kind)
+    {
+        _kind = kind;
+
+        var selected = (Brush)Application.Current.Resources["AccentSoftBrush"];
+        var accent = (Brush)Application.Current.Resources["AccentBrush"];
+        var normal = (Brush)Application.Current.Resources["BgCanvasBrush"];
+        var normalText = (Brush)Application.Current.Resources["TextPrimaryBrush"];
+
+        var isTodo = kind == ScheduleKind.Todo;
+        EventKindButton.Background = isTodo ? normal : selected;
+        EventKindButton.Foreground = isTodo ? normalText : accent;
+        TodoKindButton.Background = isTodo ? selected : normal;
+        TodoKindButton.Foreground = isTodo ? accent : normalText;
+    }
+
+    private void OnKindEventClick(object sender, RoutedEventArgs e) => SelectKind(ScheduleKind.Event);
+
+    private void OnKindTodoClick(object sender, RoutedEventArgs e) => SelectKind(ScheduleKind.Todo);
 
     private void SelectColor(string key)
     {
@@ -189,5 +213,6 @@ public sealed partial class ScheduleEditDialog : ContentDialog
         Result.Start = start;
         Result.End = end;
         Result.ColorKey = _colorKey;
+        Result.Kind = _kind;
     }
 }

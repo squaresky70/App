@@ -99,14 +99,29 @@
                                 Padding="{x:Bind Padding}"
                                 Background="{x:Bind Background}"
                                 CornerRadius="{x:Bind Corner}">
-                                <TextBlock
-                                    FontSize="10.5"
-                                    Foreground="{x:Bind Foreground}"
-                                    LineHeight="14"
-                                    MaxLines="1"
-                                    Text="{x:Bind Text}"
-                                    TextTrimming="CharacterEllipsis"
-                                    TextWrapping="NoWrap" />
+                                <Grid ColumnSpacing="3" Opacity="{x:Bind ContentOpacity}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                        FontSize="9"
+                                        Foreground="{x:Bind Foreground}"
+                                        Text="{x:Bind CheckGlyph}"
+                                        Visibility="{x:Bind CheckVisibility}" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        FontSize="10.5"
+                                        Foreground="{x:Bind Foreground}"
+                                        LineHeight="14"
+                                        MaxLines="1"
+                                        Text="{x:Bind Text}"
+                                        TextDecorations="{x:Bind Decorations}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>

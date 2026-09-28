@@ -738,6 +738,17 @@ public sealed partial class MainWindow : Window
 
     private void OnPinButtonTapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;
 
+    /// <summary>할 일의 완료 표시를 켜고 끈다.</summary>
+    private void OnToggleTodoClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: ScheduleItem item })
+        {
+            _store.ToggleDone(item);
+        }
+    }
+
+    private void OnTodoButtonTapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;
+
     private async Task ShowScheduleDialogAsync(ScheduleItem? existing, DateOnly date)
     {
         if (Content?.XamlRoot is null)

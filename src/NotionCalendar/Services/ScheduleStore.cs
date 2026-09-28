@@ -20,7 +20,7 @@ public sealed class ScheduleStore
     };
 
     private readonly Dictionary<DateOnly, List<ScheduleItem>> _byDate = new();
-    private readonly Dictionary<string, ScheduleItem> _byId = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ScheduleItem> _items = new(StringComparer.Ordinal);
     private readonly string _filePath;
 
     public ScheduleStore(string? filePath = null)
@@ -38,13 +38,13 @@ public sealed class ScheduleStore
 
     public void Load()
     {
-        _byDate.Clear();
-        _byId.Clear();
+        _items.Clear();
 
         try
         {
             if (!File.Exists(_filePath))
             {
+                Reindex();
                 return;
             }
 
@@ -52,6 +52,7 @@ public sealed class ScheduleStore
             var items = JsonSerializer.Deserialize<List<ScheduleItem>>(json, JsonOptions);
             if (items is null)
             {
+                Reindex();
                 return;
             }
 
@@ -62,31 +63,24 @@ public sealed class ScheduleStore
                     continue;
                 }
 
-                if (string.IsNullOrEmpty(item.Id) || _byId.ContainsKey(item.Id))
+                if (string.IsNullOrEmpty(item.Id) || _items.ContainsKey(item.Id))
                 {
                     item.Id = Guid.NewGuid().ToString("N");
                 }
 
                 // 종료일이 없던 예전 파일은 하루짜리로, 말이 안 되는 기간은 잘라서 받는다.
-                if (item.EndDate < item.Date)
-                {
-                    item.EndDate = item.Date;
-                }
-                else if (item.EndDate.DayNumber - item.Date.DayNumber > MaxSpanDays)
-                {
-                    item.EndDate = item.Date.AddDays(MaxSpanDays);
-                }
-
-                Index(item);
+                ClampRange(item);
+                _items[item.Id] = item;
             }
         }
         catch (Exception ex)
         {
             // 파일이 깨졌더라도 앱은 빈 달력으로 계속 동작해야 한다.
             System.Diagnostics.Debug.WriteLine($"[ScheduleStore] 불러오기 실패: {ex}");
-            _byDate.Clear();
-            _byId.Clear();
+            _items.Clear();
         }
+
+        Reindex();
     }
 
     public void Save()
@@ -99,7 +93,7 @@ public sealed class ScheduleStore
                 Directory.CreateDirectory(dir);
             }
 
-            var all = _byId.Values.OrderBy(i => i.Date).ThenBy(i => i.SortKey).ToList();
+            var all = _items.Values.OrderBy(i => i.Date).ThenBy(i => i.SortKey).ToList();
             var json = JsonSerializer.Serialize(all, JsonOptions);
 
             // 쓰다가 죽어도 기존 파일이 남도록 임시 파일에 먼저 쓴다.
@@ -127,14 +121,21 @@ public sealed class ScheduleStore
     public int CountForDate(DateOnly date)
         => _byDate.TryGetValue(date, out var list) ? list.Count : 0;
 
-    /// <summary>주요 일정(D-Day)으로 지정된 일정 전부. 여러 개일 수 있다.</summary>
+    /// <summary>주요 일정(D-Day)으로 지정된 일정 전부.</summary>
     public IReadOnlyList<ScheduleItem> PinnedItems
-        => _byId.Values.Where(item => item.IsPinned).ToList();
+        => _items.Values.Where(item => item.IsPinned).ToList();
 
     /// <summary>주요 일정 지정을 켜거나 끈다. 개수 제한은 없다.</summary>
     public void TogglePin(ScheduleItem item)
     {
         item.IsPinned = !item.IsPinned;
+        Commit();
+    }
+
+    /// <summary>할 일의 완료 표시를 켜고 끈다.</summary>
+    public void ToggleDone(ScheduleItem item)
+    {
+        item.IsDone = !item.IsDone;
         Commit();
     }
 
@@ -146,95 +147,61 @@ public sealed class ScheduleStore
         }
 
         ClampRange(item);
-        Index(item);
+        _items[item.Id] = item;
         Commit();
     }
 
-    /// <summary>편집본의 값을 원본에 반영한다. 기간이 바뀌면 인덱스도 옮긴다.</summary>
+    /// <summary>편집본의 값을 원본에 반영한다.</summary>
     public void Update(ScheduleItem target, ScheduleItem edited)
     {
-        if (!_byId.ContainsKey(target.Id))
-        {
-            // 이미 삭제된 항목을 편집한 경우 새로 추가한다.
-            target.CopyValuesFrom(edited);
-            Add(target);
-            return;
-        }
-
-        var oldStart = target.Date;
-        var oldEnd = target.EndDate;
-
         target.CopyValuesFrom(edited);
         ClampRange(target);
-
-        if (oldStart != target.Date || oldEnd != target.EndDate)
-        {
-            RemoveFromDateIndex(target, oldStart, oldEnd);
-            AddToDateIndex(target);
-        }
-
+        _items[target.Id] = target;
         Commit();
     }
 
     public void Remove(ScheduleItem item)
     {
-        _byId.Remove(item.Id);
-        RemoveFromDateIndex(item, item.Date, item.EndDate);
+        _items.Remove(item.Id);
         Commit();
     }
 
-    /// <summary>종료일이 시작일보다 앞서면 하루짜리로 맞춘다.</summary>
+    /// <summary>종료일이 시작일보다 앞서면 하루짜리로 맞춘다. 너무 긴 기간은 잘라 낸다.</summary>
     private static void ClampRange(ScheduleItem item)
     {
         if (item.EndDate < item.Date)
         {
             item.EndDate = item.Date;
         }
-    }
-
-    private void Index(ScheduleItem item)
-    {
-        _byId[item.Id] = item;
-        AddToDateIndex(item);
-    }
-
-    /// <summary>시작일부터 종료일까지 모든 날짜에 걸어 둔다. 그래야 중간 날짜에서도 조회된다.</summary>
-    private void AddToDateIndex(ScheduleItem item)
-    {
-        for (var date = item.Date; date <= item.EndDate; date = date.AddDays(1))
+        else if (item.EndDate.DayNumber - item.Date.DayNumber > MaxSpanDays)
         {
-            if (!_byDate.TryGetValue(date, out var list))
-            {
-                list = new List<ScheduleItem>();
-                _byDate[date] = list;
-            }
-
-            if (!list.Contains(item))
-            {
-                list.Add(item);
-            }
+            item.EndDate = item.Date.AddDays(MaxSpanDays);
         }
     }
 
-    private void RemoveFromDateIndex(ScheduleItem item, DateOnly from, DateOnly to)
+    /// <summary>시작일부터 종료일까지 모든 날짜에 걸어 둔다. 그래야 중간 날짜에서도 조회된다.</summary>
+    private void Reindex()
     {
-        for (var date = from; date <= to; date = date.AddDays(1))
-        {
-            if (!_byDate.TryGetValue(date, out var list))
-            {
-                continue;
-            }
+        _byDate.Clear();
 
-            list.Remove(item);
-            if (list.Count == 0)
+        foreach (var item in _items.Values)
+        {
+            for (var date = item.Date; date <= item.EndDate; date = date.AddDays(1))
             {
-                _byDate.Remove(date);
+                if (!_byDate.TryGetValue(date, out var list))
+                {
+                    list = new List<ScheduleItem>();
+                    _byDate[date] = list;
+                }
+
+                list.Add(item);
             }
         }
     }
 
     private void Commit()
     {
+        Reindex();
         Save();
         Changed?.Invoke(this, EventArgs.Empty);
     }
